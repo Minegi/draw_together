@@ -14,9 +14,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        App.L.d("onCreate()");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        App.L.d("onCreate()");
         ButterKnife.bind(this);
     }
 
@@ -25,6 +25,5 @@ public class MainActivity extends AppCompatActivity {
         App.L.d("onMoveToDrawActivity()");
         final Intent i = new Intent(this, DrawActivity.class);
         startActivity(i);
-
     }
 }
