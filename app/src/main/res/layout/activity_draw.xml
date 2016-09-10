@@ -3,22 +3,35 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.samsung.hackathon.drawtogether.MainActivity">
-
-
-    <FrameLayout
+    android:orientation="vertical"
+    tools:context="com.samsung.hackathon.drawtogether.DrawActivity"
+    android:background="#000000">
+    <LinearLayout
+        android:id="@+id/draw_tool_menu"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/pen_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/selector_tool_bg"
+            android:src="@drawable/selector_pen"
+            android:layout_margin="1dp"
+            />
+
+    </LinearLayout>
+    <FrameLayout
+        android:id="@+id/spen_view_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#222222">
         <RelativeLayout
             android:id="@+id/spen_view_layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-        </RelativeLayout>
+            android:layout_height="match_parent"
+            android:background="#ffffff" />
     </FrameLayout>
-
 </LinearLayout>
+
+
