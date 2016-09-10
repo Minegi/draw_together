@@ -4,28 +4,40 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.samsung.hackathon.drawtogether.DrawActivity"
-    android:background="#000000">
+    tools:context="com.samsung.hackathon.drawtogether.DrawActivity">
+
     <LinearLayout
         android:id="@+id/draw_tool_menu"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-
+        <!-- buttons -->
         <ImageView
             android:id="@+id/pen_btn"
-            android:layout_width="match_parent"
+            android:layout_width="0dip"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:background="@drawable/selector_tool_bg"
             android:src="@drawable/selector_pen"
             android:layout_margin="1dp"
             />
 
+        <ImageView
+            android:id="@+id/eraser_btn"
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/selector_tool_bg"
+            android:src="@drawable/selector_eraser"
+            android:layout_margin="1dip"
+            />
     </LinearLayout>
+
     <FrameLayout
         android:id="@+id/spen_view_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#222222">
+
         <RelativeLayout
             android:id="@+id/spen_view_layout"
             android:layout_width="match_parent"
