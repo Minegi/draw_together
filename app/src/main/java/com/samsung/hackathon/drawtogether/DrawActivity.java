@@ -51,6 +51,8 @@ public class DrawActivity extends AppCompatActivity {
     // buttons
     private ImageView mPenBtn;
     private ImageView mEraserBtn;
+    private ImageView mUndoBtn;
+    private ImageView mRedoBtn;
 
     // listeners
     private final View.OnClickListener mPenBtnClickListener = new View.OnClickListener() {
@@ -60,7 +62,7 @@ public class DrawActivity extends AppCompatActivity {
                 mPenSettingView.setVisibility(View.GONE);
             } else {
                 mPenSettingView.setViewMode(SpenSettingPenLayout.VIEW_MODE_NORMAL);
-                // TODO: 나타날 때 포지션 지정 (setPosition)
+                // TODO: [Low] 나타날 때 포지션 지정 (setPosition)
                 mPenSettingView.setVisibility(View.VISIBLE);
             }
             mSpenSurfaceView.setToolTypeAction(SPEN, SpenSurfaceView.ACTION_STROKE);
@@ -70,15 +72,36 @@ public class DrawActivity extends AppCompatActivity {
 
     private final View.OnClickListener mEraserBtnClickListener = new View.OnClickListener() {
         @Override
-        public void onClick(View view) {
+        public void onClick(final View view) {
             if (mEraserSettingView.isShown()) {
                 mEraserSettingView.setVisibility(View.GONE);
             } else {
-                // TODO: 나타날 때 포지션 지정 (setPosition)
+                // TODO: [Low] 나타날 때 포지션 지정 (setPosition)
                 mEraserSettingView.setVisibility(View.VISIBLE);
             }
             mSpenSurfaceView.setToolTypeAction(SPEN, SpenSurfaceView.ACTION_ERASER);
             selectButton(mEraserBtn);
+        }
+    };
+
+    private final View.OnClickListener mUndoAndRedoBtnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(final View view) {
+            if (mSpenPageDoc == null) {
+                return;
+            }
+
+            if (view.equals(mUndoBtn)) {
+                if (mSpenPageDoc.isUndoable()) {
+                    SpenPageDoc.HistoryUpdateInfo[] userData = mSpenPageDoc.undo();
+                    mSpenSurfaceView.updateUndo(userData);
+                }
+            } else if (view.equals(mRedoBtn)) {
+                if (mSpenPageDoc.isRedoable()) {
+                    SpenPageDoc.HistoryUpdateInfo[] userData = mSpenPageDoc.redo();
+                    mSpenSurfaceView.updateRedo(userData);
+                }
+            }
         }
     };
 
@@ -97,14 +120,15 @@ public class DrawActivity extends AppCompatActivity {
             new SpenSettingEraserLayout.EventListener() {
         @Override
         public void onClearAll() {
+            // TODO: [Low] 모두 지우시겠습니까? 같은 confirm dialog 달아야 됨
             mSpenPageDoc.removeAllObject();
             mSpenSurfaceView.update();
         }
     };
 
-    private SpenTouchListener mPreTouchSurfaceViewListener = new SpenTouchListener() {
+    private final SpenTouchListener mPreTouchSurfaceViewListener = new SpenTouchListener() {
         @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
+        public boolean onTouch(final View view, final MotionEvent motionEvent) {
             // Drawing 중에는 버튼을 disable 시킨다
             switch (motionEvent.getAction()) {
                 case MotionEvent.ACTION_DOWN:
@@ -118,6 +142,23 @@ public class DrawActivity extends AppCompatActivity {
             }
 
             return false;
+        }
+    };
+
+    private final SpenPageDoc.HistoryListener mHistoryListener = new SpenPageDoc.HistoryListener() {
+        @Override
+        public void onCommit(final SpenPageDoc pageDoc) {
+
+        }
+
+        @Override
+        public void onUndoable(final SpenPageDoc pageDoc, final boolean undoable) {
+            mUndoBtn.setEnabled(undoable);
+        }
+
+        @Override
+        public void onRedoable(final SpenPageDoc pageDoc, final boolean redoable) {
+            mRedoBtn.setEnabled(redoable);
         }
     };
 
@@ -183,11 +224,13 @@ public class DrawActivity extends AppCompatActivity {
             App.L.d("isSpenFeatureEnabled=" + mIsSpenFeatureEnabled);
         } catch (SsdkUnsupportedException e) {
             if (SPenSdkUtils.processUnsupportedException(this, e)) {
+                // TODO: [Low] 스트링 리소스화
                 Toast.makeText(mContext, "This device cannot support Spen SDK.",
                         Toast.LENGTH_LONG).show();
                 finish();
             }
         } catch (Exception e) {
+            // TODO: [Low] 스트링 리소스화
             Toast.makeText(mContext, "Cannot initialize Spen SDK.",
                     Toast.LENGTH_LONG).show();
             e.printStackTrace();
@@ -211,12 +254,12 @@ public class DrawActivity extends AppCompatActivity {
         mSpenSurfaceView = new SpenSurfaceView(mContext);
 
         if (mSpenSurfaceView == null) {
+            // TODO: [Low] 스트링 리소스화
             Toast.makeText(mContext, "Can't create SpenSurfaceView!", Toast.LENGTH_LONG).show();
             finish();
         }
 
         mSpenSurfaceView.setToolTipEnabled(true);
-        mSpenSurfaceView.setPreTouchListener(mPreTouchSurfaceViewListener);
         mSpenViewLayout.addView(mSpenSurfaceView);
 
         mPenSettingView.setCanvasView(mSpenSurfaceView);
@@ -232,6 +275,7 @@ public class DrawActivity extends AppCompatActivity {
         try {
             mSpenNoteDoc = new SpenNoteDoc(mContext, rect.width(), rect.height());
         } catch (IOException e) {
+            // TODO: [Low] 스트링 리소스화
             Toast.makeText(mContext, "Can't create SPenNoteDoc", Toast.LENGTH_LONG).show();
             e.printStackTrace();
             finish();
@@ -242,6 +286,7 @@ public class DrawActivity extends AppCompatActivity {
         App.L.d("createSpenPageDoc()");
         // append first page
         mSpenPageDoc = mSpenNoteDoc.appendPage();
+        // TODO: [Low] 색상 리소스화
         mSpenPageDoc.setBackgroundColor(0xffffff);
         mSpenPageDoc.clearHistory();
 
@@ -251,6 +296,7 @@ public class DrawActivity extends AppCompatActivity {
         if (!mIsSpenFeatureEnabled) {
             mSpenSurfaceView.setToolTypeAction(SpenSurfaceView.TOOL_FINGER,
                     SpenSurfaceView.ACTION_STROKE);
+            // TODO: [Low] 스트링 리소스화
             Toast.makeText(mContext, "Device does not support Spen.", Toast.LENGTH_LONG).show();
             finish();
         }
@@ -274,6 +320,8 @@ public class DrawActivity extends AppCompatActivity {
 
         // register listeners
         mSpenSurfaceView.setColorPickerListener(mColorPickerListener);
+        mSpenSurfaceView.setPreTouchListener(mPreTouchSurfaceViewListener);
+        mSpenPageDoc.setHistoryListener(mHistoryListener);
         mEraserSettingView.setEraserListener(mEraserListener);
 
         // set stroke action
@@ -288,6 +336,14 @@ public class DrawActivity extends AppCompatActivity {
 
         mEraserBtn = (ImageView) findViewById(R.id.eraser_btn);
         mEraserBtn.setOnClickListener(mEraserBtnClickListener);
+
+        mUndoBtn = (ImageView) findViewById(R.id.undo_btn);
+        mUndoBtn.setOnClickListener(mUndoAndRedoBtnClickListener);
+        mUndoBtn.setEnabled(mSpenPageDoc.isUndoable());
+
+        mRedoBtn = (ImageView) findViewById(R.id.redo_btn);
+        mRedoBtn.setOnClickListener(mUndoAndRedoBtnClickListener);
+        mRedoBtn.setEnabled(mSpenPageDoc.isRedoable());
 
         selectButton(mPenBtn);
     }
@@ -305,6 +361,8 @@ public class DrawActivity extends AppCompatActivity {
     private void enableButton(final boolean isEnable) {
         mPenBtn.setEnabled(isEnable);
         mEraserBtn.setEnabled(isEnable);
+        mUndoBtn.setEnabled(isEnable && mSpenPageDoc.isUndoable());
+        mRedoBtn.setEnabled(isEnable && mSpenPageDoc.isRedoable());
     }
 
     private void closeOtherSettingView(final View view) {
