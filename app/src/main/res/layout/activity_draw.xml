@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.samsung.hackathon.drawtogether.DrawActivity">
+    tools:context=".CreateorActivity">
 
     <LinearLayout
         android:id="@+id/draw_tool_menu"
@@ -62,7 +62,75 @@
             android:id="@+id/spen_view_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="#ffffff" />
+            android:background="#ffffff"
+            />
+
+        <ImageButton
+            android:id="@+id/show_preset_btn"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_gravity="left|bottom"
+            android:layout_marginBottom="10dip"
+            android:layout_marginLeft="10dip"
+            android:background="@drawable/circle_btn"
+            android:scaleType="fitXY"
+            android:src="@drawable/circle_btn_favorite_pen"
+            />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="@android:color/transparent"
+            android:orientation="vertical"
+            android:paddingTop="10dip">
+
+            <Button
+                android:id="@+id/edit_preset_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right|bottom"
+                android:layout_marginRight="19dp"
+                android:layout_marginBottom="5dp"
+                android:gravity="center"
+                android:text="@string/edit"
+                android:textColor="@color/presetBtnColor"
+                android:textSize="14dip"
+                android:visibility="gone"
+                />
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:background="@color/presetBgColor"
+                >
+
+                <LinearLayout
+                    android:id="@+id/preset_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="90dip"
+                    android:layout_gravity="bottom"
+                    android:paddingLeft="14dip"
+                    android:visibility="gone"
+                    >
+
+                    <ImageButton
+                        android:id="@+id/add_preset_btn"
+                        android:layout_width="28dip"
+                        android:layout_height="28dip"
+                        android:layout_gravity="bottom"
+                        android:layout_marginBottom="9dip"
+                        android:layout_marginRight="12dip"
+                        android:background="@android:color/transparent"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/add_favorite_pen"
+                        />
+
+                </LinearLayout>
+
+            </HorizontalScrollView>
+        </LinearLayout>
     </FrameLayout>
 </LinearLayout>
 
