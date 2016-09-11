@@ -20,9 +20,10 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".DrawActivity"
+            android:name=".CreateorActivity"
             android:theme="@style/AppTheme.NoActionBar"
-            android:configChanges="locale|keyboardHidden|orientation|screenSize">
+            android:configChanges="locale|keyboardHidden|orientation|screenSize"
+            android:windowSoftInputMode="adjustResize">
         </activity>
     </application>
 

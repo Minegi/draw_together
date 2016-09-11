@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="44dip"
+    android:layout_height="90dip">
+
+    <LinearLayout
+        android:id="@+id/btn_preset_layout"
+        android:layout_width="44dip"
+        android:layout_height="90dip"
+        android:gravity="bottom"
+        android:orientation="vertical">
+
+        <!-- preview와 pen은 코드 상에서 이미지가 바뀜 -->
+        <ImageView
+            android:id="@+id/preview_img"
+            android:layout_width="32dip"
+            android:layout_height="22dip"
+            android:layout_marginLeft="7dip"
+            android:rotation="-60"
+            android:src="@drawable/ic_launcher"
+            />
+
+        <ImageView
+            android:id="@+id/pen_img"
+            android:layout_width="32dip"
+            android:layout_height="47dip"
+            android:scaleType="fitXY"
+            android:src="@drawable/ic_launcher"
+            />
+
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/delete_preset_btn"
+        android:layout_width="26dip"
+        android:layout_height="26dip"
+        android:layout_gravity="bottom|right"
+        android:layout_marginBottom="4dip"
+        android:layout_marginRight="4dip"
+        android:background="@android:color/transparent"
+        android:scaleType="fitCenter"
+        android:src="@drawable/favorite_pen_edit"
+        android:visibility="gone"
+        />
+
+</FrameLayout>

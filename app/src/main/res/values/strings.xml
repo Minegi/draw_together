@@ -1,4 +1,35 @@
 <resources>
     <string name="app_name">DrawTogether</string>
-    <string name="title_activity_draw">DrawActivity</string>
+    <string name="title_activity_creator">CreatorActivity</string>
+
+    <!-- used in MainActivity -->
+    <string name="move_to_creator_activity">Move to CreatorActivity</string>
+
+    <!-- used in CreateorActivity -->
+    <string name="cant_support_spen_sdk">This device can\'t support Spen SDK.</string>
+    <string name="cant_initialize_spen_sdk">Can\'t initialize Spen SDK.</string>
+    <string name="cant_create_surface_view">Can\'t create SpenSurfaceView.</string>
+    <string name="cant_create_note_doc">Can\'t create SPenNoteDoc.</string>
+    <string name="device_doesnt_support_spen">Device doesn\'t support Spen.</string>
+    <string name="preset_is_full">Maximum of pens is %s.</string>
+    <string name="is_already_exist_same_pen">Already exists.</string>
+
+    <string name="edit">Edit</string>
+    <string name="done">Done</string>
+    <string name="pen">Pen</string>
+
+    <!-- name of SharedPreference -->
+    <string name="prefname_favorite_pen">sharedpref_favorite_pen</string>
+    <string name="prefattr_favorite_pen_size">favorite_pen_size</string>
+
+    <string name="pencil_path">com.samsung.android.sdk.pen.pen.preload.Pencil</string>
+    <string name="ink_pen_path">com.samsung.android.sdk.pen.pen.preload.InkPen</string>
+    <string name="marker_path">com.samsung.android.sdk.pen.pen.preload.Marker</string>
+    <string name="chinese_brush_path">com.samsung.android.sdk.pen.pen.preload.ChineseBrush</string>
+    <string name="beautify_path">com.samsung.android.sdk.pen.pen.preload.Beautify</string>
+    <string name="brush_path">com.samsung.android.sdk.pen.pen.preload.Brush</string>
+    <string name="magic_pen_path">com.samsung.android.sdk.pen.pen.preload.MagicPen</string>
+    <string name="fountain_pen_path">com.samsung.android.sdk.pen.pen.preload.FountainPen</string>
+    <string name="oblique_pen_path">com.samsung.android.sdk.pen.pen.preload.ObliquePen</string>
+
 </resources>
