@@ -1,0 +1,41 @@
+@startuml
+class Point {
+    - float x
+    - float y
+}
+
+abstract class Drawable {
+    # int seq
+    # ArrayList<Point> points
+}
+
+class StrokeModel {
+    - String penType
+    - int color
+    - float size
+    - String advancedSetting
+}
+
+class EraseModel {
+    - float size
+}
+
+StrokeModel -up-|> Drawable
+EraseModel -up-|> Drawable
+
+class StepModel {
+    - int seq
+    - ArrayList<StrokeModel> strokes
+}
+
+StepModel --o Drawable
+
+class ArtworkModel {
+    int seq
+    ArrayList<StepModel> steps
+}
+
+ArtworkModel --o StepModel
+
+
+@enduml
