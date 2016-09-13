@@ -1,4 +1,4 @@
-package com.samsung.hackathon.drawtogether;
+package com.samsung.hackathon.drawtogether.ui;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -37,6 +37,8 @@ import com.samsung.android.sdk.pen.engine.SpenTouchListener;
 import com.samsung.android.sdk.pen.settingui.SpenPenPresetPreviewManager;
 import com.samsung.android.sdk.pen.settingui.SpenSettingEraserLayout;
 import com.samsung.android.sdk.pen.settingui.SpenSettingPenLayout;
+import com.samsung.hackathon.drawtogether.App;
+import com.samsung.hackathon.drawtogether.R;
 import com.samsung.hackathon.drawtogether.util.BitmapUtils;
 import com.samsung.hackathon.drawtogether.util.SPenSdkUtils;
 

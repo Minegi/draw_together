@@ -13,14 +13,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity">
+            android:name=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:name=".CreateorActivity"
+            android:name=".ui.CreateorActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:configChanges="locale|keyboardHidden|orientation|screenSize"
             android:windowSoftInputMode="adjustResize">

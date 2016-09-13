@@ -1,9 +1,12 @@
-package com.samsung.hackathon.drawtogether;
+package com.samsung.hackathon.drawtogether.ui;
 
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+
+import com.samsung.hackathon.drawtogether.App;
+import com.samsung.hackathon.drawtogether.R;
 
 import butterknife.ButterKnife;
 
