@@ -14,8 +14,8 @@
     <string name="preset_is_full">Maximum of pens is %s.</string>
     <string name="is_already_exist_same_pen">Already exists.</string>
 
-    <string name="edit">Edit</string>
-    <string name="done">Done</string>
+    <string name="edit">편집</string>
+    <string name="done">완료</string>
     <string name="pen">Pen</string>
 
     <!-- name of SharedPreference -->
@@ -31,5 +31,15 @@
     <string name="magic_pen_path">com.samsung.android.sdk.pen.pen.preload.MagicPen</string>
     <string name="fountain_pen_path">com.samsung.android.sdk.pen.pen.preload.FountainPen</string>
     <string name="oblique_pen_path">com.samsung.android.sdk.pen.pen.preload.ObliquePen</string>
+
+    <!-- contentDescription -->
+    <string name="cd_eraser">지우개</string>
+    <string name="cd_pen">펜</string>
+    <string name="cd_undo">실행 취소</string>
+    <string name="cd_redo">다시 실행</string>
+    <string name="cd_save">저장</string>
+    <string name="cd_show_preset">프리셋 보기</string>
+    <string name="cd_edit_preset">프리셋 편집</string>
+    <string name="cd_add_preset">프리셋 추가</string>
 
 </resources>

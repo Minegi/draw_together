@@ -16,7 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <!-- buttons -->
-        <ImageView
+        <ImageButton
             android:id="@+id/pen_btn"
             android:layout_width="0dip"
             android:layout_height="wrap_content"
@@ -24,9 +24,10 @@
             android:background="@drawable/selector_tool_bg"
             android:src="@drawable/selector_pen"
             android:layout_margin="1dp"
+            android:contentDescription="@string/cd_pen"
             />
 
-        <ImageView
+        <ImageButton
             android:id="@+id/eraser_btn"
             android:layout_width="0dip"
             android:layout_height="wrap_content"
@@ -34,9 +35,10 @@
             android:background="@drawable/selector_tool_bg"
             android:src="@drawable/selector_eraser"
             android:layout_margin="1dip"
+            android:contentDescription="@string/cd_eraser"
             />
 
-        <ImageView
+        <ImageButton
             android:id="@+id/undo_btn"
             android:layout_width="0dip"
             android:layout_height="wrap_content"
@@ -44,8 +46,9 @@
             android:background="@drawable/selector_tool_bg"
             android:src="@drawable/selector_undo"
             android:layout_margin="1dip"
+            android:contentDescription="@string/cd_undo"
             />
-        <ImageView
+        <ImageButton
             android:id="@+id/redo_btn"
             android:layout_width="0dip"
             android:layout_height="wrap_content"
@@ -53,6 +56,17 @@
             android:background="@drawable/selector_tool_bg"
             android:src="@drawable/selector_redo"
             android:layout_margin="1dip"
+            android:contentDescription="@string/cd_redo"
+            />
+        <ImageButton
+            android:id="@+id/save_btn"
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/selector_tool_bg"
+            android:src="@drawable/selector_capture"
+            android:layout_margin="1dip"
+            android:contentDescription="@string/cd_save"
             />
 
     </LinearLayout>
@@ -80,6 +94,7 @@
             android:background="@drawable/circle_btn"
             android:scaleType="fitXY"
             android:src="@drawable/circle_btn_favorite_pen"
+            android:contentDescription="@string/cd_show_preset"
             />
 
         <LinearLayout
@@ -102,6 +117,7 @@
                 android:textColor="@color/presetBtnColor"
                 android:textSize="14dip"
                 android:visibility="gone"
+                android:contentDescription="@string/cd_edit_preset"
                 />
 
             <HorizontalScrollView
@@ -130,6 +146,7 @@
                         android:background="@android:color/transparent"
                         android:scaleType="fitCenter"
                         android:src="@drawable/add_favorite_pen"
+                        android:contentDescription="@string/cd_add_preset"
                         />
 
                 </LinearLayout>

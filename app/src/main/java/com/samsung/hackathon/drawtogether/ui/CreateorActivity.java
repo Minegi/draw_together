@@ -29,6 +29,8 @@ import com.samsung.android.sdk.pen.SpenSettingEraserInfo;
 import com.samsung.android.sdk.pen.SpenSettingPenInfo;
 import com.samsung.android.sdk.pen.SpenSettingViewInterface;
 import com.samsung.android.sdk.pen.document.SpenNoteDoc;
+import com.samsung.android.sdk.pen.document.SpenObjectBase;
+import com.samsung.android.sdk.pen.document.SpenObjectStroke;
 import com.samsung.android.sdk.pen.document.SpenPageDoc;
 import com.samsung.android.sdk.pen.engine.SpenColorPickerListener;
 import com.samsung.android.sdk.pen.engine.SpenPenChangeListener;
@@ -60,6 +62,8 @@ public class CreateorActivity extends AppCompatActivity {
 
     private SpenPenPresetPreviewManager mPenPresetPreviewManager;
 
+    private ArrayList<SpenObjectStroke> mStrokeList;
+
     // constants
     private final int SPEN = SpenSettingViewInterface.TOOL_SPEN;
 
@@ -76,10 +80,11 @@ public class CreateorActivity extends AppCompatActivity {
     private LinearLayout mPresetLayout;
 
     // buttons
-    private ImageView mPenBtn;
-    private ImageView mEraserBtn;
-    private ImageView mUndoBtn;
-    private ImageView mRedoBtn;
+    private ImageButton mPenBtn;
+    private ImageButton mEraserBtn;
+    private ImageButton mUndoBtn;
+    private ImageButton mRedoBtn;
+    private ImageButton mSaveBtn;
     private ImageButton mShowPresetBtn;
     private ImageButton mAddPresetBtn;
     private Button mEditPresetBtn;
@@ -135,6 +140,15 @@ public class CreateorActivity extends AppCompatActivity {
         }
     };
 
+    private final View.OnClickListener mSaveBtnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(final View view) {
+            // TODO: 현재 테스트 용도로 사용 중
+            final int objCnt = mSpenPageDoc.getObjectCount(SpenPageDoc.FIND_TYPE_ALL, false);
+            App.L.d("[ObjCnt] " + objCnt);
+        }
+    };
+
     private final SpenSettingPenLayout.PresetListener mPresetListener
             = new SpenSettingPenLayout.PresetListener() {
         @Override
@@ -156,6 +170,9 @@ public class CreateorActivity extends AppCompatActivity {
                     }
                 }
 
+                App.L.d("[PenPresetAdded] name=" + info.name + ",color="
+                        + Integer.toHexString(info.color) + ",size=" + info.size
+                        + ",advSetting=" + info.advancedSetting);
                 final SpenSettingPenInfo tmpInfo = new SpenSettingPenInfo();
                 tmpInfo.name = info.name;
                 tmpInfo.color = info.color;
@@ -165,6 +182,7 @@ public class CreateorActivity extends AppCompatActivity {
                 mFavoritePenList.add(tmpInfo);
             }
             mPenSettingView.setVisibility(View.GONE);
+            mEraserSettingView.setVisibility(View.GONE);
             initializePresetLayout();
         }
 
@@ -242,6 +260,55 @@ public class CreateorActivity extends AppCompatActivity {
             mRedoBtn.setEnabled(redoable);
         }
     };
+
+    private final SpenPageDoc.ObjectListener mSpenObjectEventListener =
+            new SpenPageDoc.ObjectListener() {
+                @Override
+                public void onObjectAdded(final SpenPageDoc spenPageDoc,
+                                          final ArrayList<SpenObjectBase> arrayList,
+                                          final int type) {
+                    if (mStrokeList == null) {
+                        return;
+                    }
+
+                    final int objCnt = mSpenPageDoc.getObjectCount(SpenPageDoc.FIND_TYPE_ALL,
+                            false);
+                    App.L.d("[ObjectAdded] objCnt=" + objCnt);
+                    if (arrayList.get(arrayList.size() - 1) instanceof SpenObjectStroke) {
+                        mStrokeList.add((SpenObjectStroke) arrayList.get(arrayList.size() - 1));
+                        App.L.d("[ObjectAdded] added!");
+                    }
+                }
+
+                @Override
+                public void onObjectRemoved(final SpenPageDoc spenPageDoc,
+                                            final ArrayList<SpenObjectBase> arrayList,
+                                            final int type) {
+                    if (mStrokeList == null) {
+                        return;
+                    }
+
+                    final int objCnt = mSpenPageDoc.getObjectCount(SpenPageDoc.FIND_TYPE_ALL,
+                            false);
+                    App.L.d("[ObjectRemoved] objCnt=" + objCnt);
+                    mStrokeList.remove(objCnt);
+                    App.L.d("[ObjectRemoved] removed!");
+                }
+
+                @Override
+                public void onObjectChanged(final SpenPageDoc spenPageDoc,
+                                            final SpenObjectBase spenObjectBase,
+                                            final int type) {
+                    if (mStrokeList == null) {
+                        return;
+                    }
+
+                    App.L.d("[ObjectChanged] start");
+                    final int objCnt = mSpenPageDoc.getObjectCount(SpenPageDoc.FIND_TYPE_ALL,
+                            false);
+                    App.L.d("[ObjCnt] " + objCnt);
+                }
+            };
 
     private final View.OnClickListener mShowPresetListener = new View.OnClickListener() {
         @Override
@@ -363,15 +430,29 @@ public class CreateorActivity extends AppCompatActivity {
     private final View.OnTouchListener mTouchSurfaceViewListener = new View.OnTouchListener() {
         @Override
         public boolean onTouch(final View view, final MotionEvent event) {
-            // Draw 중에는 preset 관련 레이아웃은 GONE 상태로 설정한다.
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                if (mSpenSurfaceView.getToolTypeAction(SPEN) == SpenSurfaceView.ACTION_STROKE) {
-                    mPenSettingView.setVisibility(View.GONE);
-                    mPresetLayout.setVisibility(View.GONE);
-                    mEditPresetBtn.setVisibility(View.GONE);
-                    mShowPresetBtn.setVisibility(View.VISIBLE);
+            if (mSpenSurfaceView == null || mSpenPageDoc == null) {
+                return false;
+            }
+
+            final int pointerIdx = 0;
+
+            // 펜 데이터만 처리
+            if (event.getToolType(pointerIdx) != MotionEvent.TOOL_TYPE_STYLUS) {
+                closePresetLayout();
+                return false;
+            }
+
+            final int action = event.getAction();
+            final int penAction = mSpenSurfaceView.getToolTypeAction(SPEN);
+
+            if (action == MotionEvent.ACTION_DOWN) {
+                if (penAction == SpenSurfaceView.ACTION_STROKE
+                        || penAction == SpenSurfaceView.ACTION_ERASER) {
+                    // Stroke or Erase 중에는 preset layout은 GONE 상태로 설정한다.
+                    closePresetLayout();
                 }
             }
+
             return false;
         }
     };
@@ -449,7 +530,7 @@ public class CreateorActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
-        App.L.debug("onCreate()");
+        App.L.d("");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_creator);
         mContext = getApplicationContext();
@@ -465,6 +546,7 @@ public class CreateorActivity extends AppCompatActivity {
         initializeSettingInfo();
 
         initializeOtherViews();
+        initializeStrokeDataModels();
         loadFavoritePenList();
 
         mPenPresetPreviewManager = new SpenPenPresetPreviewManager(mContext);
@@ -473,15 +555,18 @@ public class CreateorActivity extends AppCompatActivity {
         setPresetViewMode(PRESET_MODE_VIEW);
     }
 
+
+
     @Override
     protected void onPause() {
+        App.L.d("");
         super.onPause();
         savePreset();
     }
 
     @Override
     protected void onDestroy() {
-        App.L.debug("onDestroy()");
+        App.L.d("");
         super.onDestroy();
 
         // destroy SpenSurfaceView
@@ -511,7 +596,7 @@ public class CreateorActivity extends AppCompatActivity {
     }
 
     private void initializeSpenSdk() {
-        App.L.d("initializeSpenSdk()");
+        App.L.d("");
 
         mIsSpenFeatureEnabled = false;
         Spen sPenPackage = new Spen();
@@ -532,7 +617,7 @@ public class CreateorActivity extends AppCompatActivity {
     }
 
     private void createSpenSettingView() {
-        App.L.d("createSpenSettingView()");
+        App.L.d("");
 
         mPenSettingView = new SpenSettingPenLayout(mContext, "", mSpenViewLayout);
         mEraserSettingView = new SpenSettingEraserLayout(mContext, "", mSpenViewLayout);
@@ -542,7 +627,7 @@ public class CreateorActivity extends AppCompatActivity {
     }
 
     private void createSpenSurfaceView() {
-        App.L.d("createSpenSurfaceView()");
+        App.L.d("");
 
         mSpenSurfaceView = new SpenSurfaceView(mContext);
 
@@ -559,7 +644,7 @@ public class CreateorActivity extends AppCompatActivity {
     }
 
     private void createSpenNoteDoc() {
-        App.L.d("createSpenNoteDoc()");
+        App.L.d("");
         Display display = getWindowManager().getDefaultDisplay();
         Rect rect = new Rect();
         display.getRectSize(rect);
@@ -574,7 +659,7 @@ public class CreateorActivity extends AppCompatActivity {
     }
 
     private void createSpenPageDoc() {
-        App.L.d("createSpenPageDoc()");
+        App.L.d("");
         // append first page
         mSpenPageDoc = mSpenNoteDoc.appendPage();
         mSpenPageDoc.setBackgroundColor(ContextCompat.getColor(this, R.color.white));
@@ -584,15 +669,13 @@ public class CreateorActivity extends AppCompatActivity {
 
         // 아직까지는 Spen 모드만 지원한다
         if (!mIsSpenFeatureEnabled) {
-            mSpenSurfaceView.setToolTypeAction(SpenSurfaceView.TOOL_FINGER,
-                    SpenSurfaceView.ACTION_STROKE);
             Toast.makeText(mContext, R.string.device_doesnt_support_spen, Toast.LENGTH_LONG).show();
             finish();
         }
     }
 
     private void initializeSettingInfo() {
-        App.L.d("initializeSettingInfo()");
+        App.L.d("");
 
         // pen setting
         final SpenSettingPenInfo penInfo = new SpenSettingPenInfo();
@@ -614,17 +697,23 @@ public class CreateorActivity extends AppCompatActivity {
         mSpenSurfaceView.setPenChangeListener(mPenChangeListener);
         mSpenSurfaceView.setOnTouchListener(mTouchSurfaceViewListener);
         mSpenPageDoc.setHistoryListener(mHistoryListener);
+        mSpenPageDoc.setObjectListener(mSpenObjectEventListener);
         mEraserSettingView.setEraserListener(mEraserListener);
 
         // set stroke action
         mSpenSurfaceView.setToolTypeAction(SpenSettingViewInterface.TOOL_SPEN,
                 SpenSurfaceView.ACTION_STROKE);
+        mSpenSurfaceView.setToolTypeAction(SpenSettingViewInterface.TOOL_FINGER,
+                SpenSurfaceView.ACTION_NONE);
+
+        // disable zoom action
+        mSpenSurfaceView.setZoomable(true);
     }
 
     private void initializeOtherViews() {
-        App.L.d("initializeOtherViews()");
+        App.L.d("");
         // bind views and listeners
-        mPenBtn = (ImageView) findViewById(R.id.pen_btn);
+        mPenBtn = (ImageButton) findViewById(R.id.pen_btn);
         mPenBtn.setOnClickListener(mPenBtnClickListener);
 
         mShowPresetBtn = (ImageButton) findViewById(R.id.show_preset_btn);
@@ -638,24 +727,32 @@ public class CreateorActivity extends AppCompatActivity {
         mEditPresetBtn.setOnClickListener(mEditPresetListener);
         setRippleBackground(mEditPresetBtn);
 
-        mEraserBtn = (ImageView) findViewById(R.id.eraser_btn);
+        mEraserBtn = (ImageButton) findViewById(R.id.eraser_btn);
         mEraserBtn.setOnClickListener(mEraserBtnClickListener);
 
-        mUndoBtn = (ImageView) findViewById(R.id.undo_btn);
+        mUndoBtn = (ImageButton) findViewById(R.id.undo_btn);
         mUndoBtn.setOnClickListener(mUndoAndRedoBtnClickListener);
         mUndoBtn.setEnabled(mSpenPageDoc.isUndoable());
 
-        mRedoBtn = (ImageView) findViewById(R.id.redo_btn);
+        mRedoBtn = (ImageButton) findViewById(R.id.redo_btn);
         mRedoBtn.setOnClickListener(mUndoAndRedoBtnClickListener);
         mRedoBtn.setEnabled(mSpenPageDoc.isRedoable());
+
+        mSaveBtn = (ImageButton) findViewById(R.id.save_btn);
+        mSaveBtn.setOnClickListener(mSaveBtnClickListener);
 
         mPresetLayout = (LinearLayout) findViewById(R.id.preset_layout);
 
         selectButton(mPenBtn);
     }
 
+    private void initializeStrokeDataModels() {
+        App.L.d("");
+        mStrokeList = new ArrayList<SpenObjectStroke>();
+    }
+
     private void loadFavoritePenList() {
-        App.L.d("loadFavoritePenList()");
+        App.L.d("");
         mFavoritePenList = new ArrayList<SpenSettingPenInfo>();
         final SharedPreferences favoritePenPref =
                 getSharedPreferences(getString(R.string.prefname_favorite_pen), MODE_PRIVATE);
@@ -683,7 +780,7 @@ public class CreateorActivity extends AppCompatActivity {
     }
 
     private void initializePresetLayout() {
-        App.L.d("initializePresetLayout()");
+        App.L.d("");
 
         mPresetLayout.removeAllViews();
         LayoutInflater inflater =
@@ -740,6 +837,7 @@ public class CreateorActivity extends AppCompatActivity {
     private void selectButton(final View view) {
         mPenBtn.setSelected(false);
         mEraserBtn.setSelected(false);
+        mSaveBtn.setSelected(false);
 
         view.setSelected(true);
 
@@ -820,7 +918,7 @@ public class CreateorActivity extends AppCompatActivity {
     }
 
     private void savePreset() {
-        App.L.d("savePreset()");
+        App.L.d("");
         final SharedPreferences favoritePenPref =
                 getSharedPreferences(getString(R.string.prefname_favorite_pen), MODE_PRIVATE);
         final SharedPreferences.Editor editor = favoritePenPref.edit();
@@ -834,5 +932,13 @@ public class CreateorActivity extends AppCompatActivity {
             editor.putString(getString(R.string.pen).toLowerCase() + i, presetInfo);
         }
         editor.commit();
+    }
+
+    private void closePresetLayout() {
+        mPenSettingView.setVisibility(View.GONE);
+        mEraserSettingView.setVisibility(View.GONE);
+        mPresetLayout.setVisibility(View.GONE);
+        mEditPresetBtn.setVisibility(View.GONE);
+        mShowPresetBtn.setVisibility(View.VISIBLE);
     }
 }
