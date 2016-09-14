@@ -1,6 +1,7 @@
 package com.samsung.hackathon.drawtogether.ui;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.BitmapFactory;
@@ -9,6 +10,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -41,6 +43,7 @@ import com.samsung.android.sdk.pen.settingui.SpenSettingEraserLayout;
 import com.samsung.android.sdk.pen.settingui.SpenSettingPenLayout;
 import com.samsung.hackathon.drawtogether.App;
 import com.samsung.hackathon.drawtogether.R;
+import com.samsung.hackathon.drawtogether.model.StepModel;
 import com.samsung.hackathon.drawtogether.util.BitmapUtils;
 import com.samsung.hackathon.drawtogether.util.SPenSdkUtils;
 
@@ -48,7 +51,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CreateorActivity extends AppCompatActivity {
+public class CreatorActivity extends AppCompatActivity {
 
     private Context mContext;
 
@@ -63,6 +66,7 @@ public class CreateorActivity extends AppCompatActivity {
     private SpenPenPresetPreviewManager mPenPresetPreviewManager;
 
     private ArrayList<SpenObjectStroke> mStrokeList;
+    private ArrayList<StepModel> mStepModelList;
 
     // constants
     private final int SPEN = SpenSettingViewInterface.TOOL_SPEN;
@@ -85,9 +89,14 @@ public class CreateorActivity extends AppCompatActivity {
     private ImageButton mUndoBtn;
     private ImageButton mRedoBtn;
     private ImageButton mSaveBtn;
+    private ImageButton mNextStepBtn;
     private ImageButton mShowPresetBtn;
     private ImageButton mAddPresetBtn;
     private Button mEditPresetBtn;
+
+    // dialogs
+    private AlertDialog mDeleteAllDlg;
+    private AlertDialog mNextStepDlg;
 
     // listeners
     private final View.OnClickListener mPenBtnClickListener = new View.OnClickListener() {
@@ -219,9 +228,9 @@ public class CreateorActivity extends AppCompatActivity {
             new SpenSettingEraserLayout.EventListener() {
         @Override
         public void onClearAll() {
-            // TODO: [Low] 모두 지우시겠습니까? 같은 confirm dialog 달아야 됨
-            mSpenPageDoc.removeAllObject();
-            mSpenSurfaceView.update();
+            if (mDeleteAllDlg != null) {
+                mDeleteAllDlg.show();
+            }
         }
     };
 
@@ -291,7 +300,7 @@ public class CreateorActivity extends AppCompatActivity {
                     final int objCnt = mSpenPageDoc.getObjectCount(SpenPageDoc.FIND_TYPE_ALL,
                             false);
                     App.L.d("[ObjectRemoved] objCnt=" + objCnt);
-                    mStrokeList.remove(objCnt);
+                    mStrokeList.remove(mStrokeList.size() - 1);
                     App.L.d("[ObjectRemoved] removed!");
                 }
 
@@ -317,6 +326,15 @@ public class CreateorActivity extends AppCompatActivity {
             mEditPresetBtn.setVisibility(View.VISIBLE);
             mPresetLayout.setVisibility(View.VISIBLE);
             setPresetViewMode(PRESET_MODE_VIEW);
+        }
+    };
+
+    private final View.OnClickListener mNextStepBtnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(final View view) {
+            if (mNextStepDlg != null) {
+                mNextStepDlg.show();
+            }
         }
     };
 
@@ -546,6 +564,7 @@ public class CreateorActivity extends AppCompatActivity {
         initializeSettingInfo();
 
         initializeOtherViews();
+        createDialogs();
         initializeStrokeDataModels();
         loadFavoritePenList();
 
@@ -554,6 +573,7 @@ public class CreateorActivity extends AppCompatActivity {
         initializePresetLayout();
         setPresetViewMode(PRESET_MODE_VIEW);
     }
+
 
 
 
@@ -606,8 +626,9 @@ public class CreateorActivity extends AppCompatActivity {
             App.L.d("isSpenFeatureEnabled=" + mIsSpenFeatureEnabled);
         } catch (SsdkUnsupportedException e) {
             if (SPenSdkUtils.processUnsupportedException(this, e)) {
+                mSpenSurfaceView.setToolTypeAction(SpenSurfaceView.TOOL_FINGER,
+                        SpenSurfaceView.ACTION_STROKE);
                 Toast.makeText(mContext, R.string.cant_support_spen_sdk, Toast.LENGTH_LONG).show();
-                finish();
             }
         } catch (Exception e) {
             Toast.makeText(mContext, R.string.cant_initialize_spen_sdk, Toast.LENGTH_LONG).show();
@@ -719,6 +740,9 @@ public class CreateorActivity extends AppCompatActivity {
         mShowPresetBtn = (ImageButton) findViewById(R.id.show_preset_btn);
         mShowPresetBtn.setOnClickListener(mShowPresetListener);
 
+        mNextStepBtn = (ImageButton) findViewById(R.id.next_step_btn);
+        mNextStepBtn.setOnClickListener(mNextStepBtnClickListener);
+
         mAddPresetBtn = (ImageButton) findViewById(R.id.add_preset_btn);
         mAddPresetBtn.setOnClickListener(mAddPresetListener);
         setRippleBackground(mAddPresetBtn);
@@ -746,9 +770,54 @@ public class CreateorActivity extends AppCompatActivity {
         selectButton(mPenBtn);
     }
 
+    private void createDialogs() {
+        App.L.d("");
+        mDeleteAllDlg = new AlertDialog.Builder(CreatorActivity.this,
+                R.style.DialogTheme)
+                .setTitle(R.string.dlg_delete_all)
+                .setMessage(R.string.dlg_delete_all_description)
+                .setPositiveButton(R.string.dlg_yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dlg, int which) {
+                        mSpenPageDoc.removeAllObject();
+                        mSpenSurfaceView.update();
+                        mSpenPageDoc.clearHistory();
+                        mStrokeList.clear();
+                    }
+                })
+                .setNegativeButton(R.string.dlg_no, null)
+                .create();
+
+        mNextStepDlg = new AlertDialog.Builder(CreatorActivity.this,
+                R.style.DialogTheme)
+                .setTitle(R.string.dlg_next_step)
+                .setMessage(R.string.dlg_next_step_description)
+                .setPositiveButton(R.string.dlg_yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dlg, int which) {
+                        // 현재까지의 단계 저장 및 다음 단계로 이동
+                        final StepModel step = new StepModel();
+                        step.setStrokes(new ArrayList<SpenObjectStroke>());
+                        step.getStrokes().addAll(mStrokeList);
+                        mStrokeList.clear();
+                        App.L.d("step.getStrokes().size()=" + step.getStrokes().size());
+                        mStepModelList.add(step);
+
+                        // 이전 step으로 undo가 되지 못하도록 설정하고 undo / redo 버튼의 상태를 갱신
+                        mSpenPageDoc.clearHistory();
+
+                        mUndoBtn.setEnabled(mSpenPageDoc.isUndoable());
+                        mRedoBtn.setEnabled(mSpenPageDoc.isRedoable());
+                    }
+                })
+                .setNegativeButton(R.string.dlg_no, null)
+                .create();
+    }
+
     private void initializeStrokeDataModels() {
         App.L.d("");
         mStrokeList = new ArrayList<SpenObjectStroke>();
+        mStepModelList = new ArrayList<StepModel>();
     }
 
     private void loadFavoritePenList() {

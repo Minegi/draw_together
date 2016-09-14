@@ -11,6 +11,4 @@ import lombok.Data;
 public class StepModel {
     private int seq;
     private ArrayList<SpenObjectStroke> strokes;
-
-
 }

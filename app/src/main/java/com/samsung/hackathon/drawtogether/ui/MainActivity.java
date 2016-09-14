@@ -23,7 +23,7 @@ public class MainActivity extends AppCompatActivity {
     public void onMoveToCreatorActivity(final View view)
     {
         App.L.d("");
-        final Intent i = new Intent(this, CreateorActivity.class);
+        final Intent i = new Intent(this, CreatorActivity.class);
         startActivity(i);
     }
 }

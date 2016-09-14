@@ -6,4 +6,7 @@
     <color name="white">#FFFFFF</color>
     <color name="presetBtnColor">#FE4702</color>
     <color name="presetBgColor">#FFEAEAEA</color>
+
+    <color name="dlg_colorAccent">#FE4702</color>
+    <color name="dlg_bgColor">#FFEAEAEA</color>
 </resources>

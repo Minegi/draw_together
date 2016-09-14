@@ -20,7 +20,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.CreateorActivity"
+            android:name=".ui.CreatorActivity"
             android:theme="@style/AppTheme.NoActionBar"
             android:configChanges="locale|keyboardHidden|orientation|screenSize"
             android:windowSoftInputMode="adjustResize">

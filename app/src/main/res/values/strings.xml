@@ -5,7 +5,7 @@
     <!-- used in MainActivity -->
     <string name="move_to_creator_activity">Move to CreatorActivity</string>
 
-    <!-- used in CreateorActivity -->
+    <!-- used in CreatorActivity -->
     <string name="cant_support_spen_sdk">This device can\'t support Spen SDK.</string>
     <string name="cant_initialize_spen_sdk">Can\'t initialize Spen SDK.</string>
     <string name="cant_create_surface_view">Can\'t create SpenSurfaceView.</string>
@@ -41,5 +41,14 @@
     <string name="cd_show_preset">프리셋 보기</string>
     <string name="cd_edit_preset">프리셋 편집</string>
     <string name="cd_add_preset">프리셋 추가</string>
+    <string name="next_step">다음 단계로</string>
+
+    <!-- Dialog -->
+    <string name="dlg_delete_all">모두 삭제</string>
+    <string name="dlg_delete_all_description">현재까지의 내용을 모두 지우시겠습니까?</string>
+    <string name="dlg_yes">네</string>
+    <string name="dlg_no">아니오</string>
+    <string name="dlg_next_step">다음 단계로 이동</string>
+    <string name="dlg_next_step_description">현재까지의 내용을 저장하고 다음 단계를 작성하시겠습니까? 다음 단계로 넘어가면 이전 단계로 돌아갈 수 없습니다.</string>
 
 </resources>

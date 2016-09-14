@@ -9,7 +9,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context=".ui.CreateorActivity">
+    tools:context=".ui.CreatorActivity">
 
     <LinearLayout
         android:id="@+id/draw_tool_menu"
@@ -23,7 +23,7 @@
             android:layout_weight="1"
             android:background="@drawable/selector_tool_bg"
             android:src="@drawable/selector_pen"
-            android:layout_margin="1dp"
+            android:layout_margin="1dip"
             android:contentDescription="@string/cd_pen"
             />
 
@@ -86,8 +86,8 @@
 
         <ImageButton
             android:id="@+id/show_preset_btn"
-            android:layout_width="34dp"
-            android:layout_height="34dp"
+            android:layout_width="34dip"
+            android:layout_height="34dip"
             android:layout_gravity="left|bottom"
             android:layout_marginBottom="10dip"
             android:layout_marginLeft="10dip"
@@ -95,6 +95,19 @@
             android:scaleType="fitXY"
             android:src="@drawable/circle_btn_favorite_pen"
             android:contentDescription="@string/cd_show_preset"
+            />
+
+        <ImageButton
+            android:id="@+id/next_step_btn"
+            android:layout_width="34dip"
+            android:layout_height="34dip"
+            android:layout_gravity="right|bottom"
+            android:layout_marginBottom="10dip"
+            android:layout_marginRight="10dip"
+            android:background="@drawable/circle_btn"
+            android:scaleType="fitXY"
+            android:src="@drawable/circle_btn_favorite_pen"
+            android:contentDescription="@string/next_step"
             />
 
         <LinearLayout
@@ -110,8 +123,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="right|bottom"
-                android:layout_marginRight="19dp"
-                android:layout_marginBottom="5dp"
+                android:layout_marginRight="19dip"
+                android:layout_marginBottom="5dip"
                 android:gravity="center"
                 android:text="@string/edit"
                 android:textColor="@color/presetBtnColor"
@@ -136,6 +149,7 @@
                     android:visibility="gone"
                     >
 
+                    <!-- TODO: 아이콘 이미지 바꿔야 함 -->
                     <ImageButton
                         android:id="@+id/add_preset_btn"
                         android:layout_width="28dip"
