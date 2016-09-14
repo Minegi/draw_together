@@ -451,7 +451,7 @@ public class CreateorActivity extends AppCompatActivity {
     protected void onCreate(final Bundle savedInstanceState) {
         App.L.debug("onCreate()");
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_draw);
+        setContentView(R.layout.activity_creator);
         mContext = getApplicationContext();
 
         mSpenViewContainer = (FrameLayout) findViewById(R.id.spen_view_container);
