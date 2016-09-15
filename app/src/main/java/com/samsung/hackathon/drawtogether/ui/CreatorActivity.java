@@ -4,11 +4,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -47,9 +49,14 @@ import com.samsung.hackathon.drawtogether.model.StepModel;
 import com.samsung.hackathon.drawtogether.util.BitmapUtils;
 import com.samsung.hackathon.drawtogether.util.SPenSdkUtils;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class CreatorActivity extends AppCompatActivity {
 
@@ -153,8 +160,7 @@ public class CreatorActivity extends AppCompatActivity {
         @Override
         public void onClick(final View view) {
             // TODO: 현재 테스트 용도로 사용 중
-            final int objCnt = mSpenPageDoc.getObjectCount(SpenPageDoc.FIND_TYPE_ALL, false);
-            App.L.d("[ObjCnt] " + objCnt);
+            createThumbnail();
         }
     };
 
@@ -725,7 +731,7 @@ public class CreatorActivity extends AppCompatActivity {
         mSpenSurfaceView.setToolTypeAction(SpenSettingViewInterface.TOOL_SPEN,
                 SpenSurfaceView.ACTION_STROKE);
         mSpenSurfaceView.setToolTypeAction(SpenSettingViewInterface.TOOL_FINGER,
-                SpenSurfaceView.ACTION_NONE);
+                SpenSurfaceView.ACTION_GESTURE);
 
         // disable zoom action
         mSpenSurfaceView.setZoomable(true);
@@ -783,6 +789,7 @@ public class CreatorActivity extends AppCompatActivity {
                         mSpenSurfaceView.update();
                         mSpenPageDoc.clearHistory();
                         mStrokeList.clear();
+                        mStepModelList.clear();
                     }
                 })
                 .setNegativeButton(R.string.dlg_no, null)
@@ -800,7 +807,8 @@ public class CreatorActivity extends AppCompatActivity {
                         step.setStrokes(new ArrayList<SpenObjectStroke>());
                         step.getStrokes().addAll(mStrokeList);
                         mStrokeList.clear();
-                        App.L.d("step.getStrokes().size()=" + step.getStrokes().size());
+                        App.L.d("step.getStrokes().size()=" + step.getStrokes().size()
+                                + ", mStepModelList.size()=" + mStepModelList.size());
                         mStepModelList.add(step);
 
                         // 이전 step으로 undo가 되지 못하도록 설정하고 undo / redo 버튼의 상태를 갱신
@@ -1009,5 +1017,45 @@ public class CreatorActivity extends AppCompatActivity {
         mPresetLayout.setVisibility(View.GONE);
         mEditPresetBtn.setVisibility(View.GONE);
         mShowPresetBtn.setVisibility(View.VISIBLE);
+    }
+
+    private void createThumbnail() {
+        if (mSpenSurfaceView != null) {
+            final String directoryPath = new StringBuilder(getExternalCacheDir().
+                    getAbsolutePath()).toString();
+            final String fileName = new String(UUID.randomUUID().toString() + ".png");
+            App.L.d("directoryPath=" + directoryPath);
+
+            File dir = null;
+            FileOutputStream out = null;
+            try {
+                dir = new File(directoryPath);
+                App.L.d(dir);
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+
+                App.L.d(dir.getAbsolutePath() + '/' + fileName);
+                // TODO: 썸네일의 크기 변경 필요
+                final float width = getResources().getDimension(R.dimen.thumbnail_width);
+                final float height = getResources().getDimension(R.dimen.thumbnail_height);
+                App.L.d("width=" + width + ",height=" + height);
+                out = new FileOutputStream(dir.getAbsolutePath() + '/' + fileName);
+                final Bitmap scaledBitmap = Bitmap.createScaledBitmap(
+                        mSpenSurfaceView.capturePage(1.0f), (int)width, (int)height, true);
+                scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                scaledBitmap.recycle();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    out.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }
