@@ -1,14 +1,12 @@
 package com.samsung.hackathon.drawtogether.model;
 
-
-import com.samsung.android.sdk.pen.document.SpenObjectStroke;
-
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import lombok.Data;
 
 @Data
-public class StepModel {
+public class StepModel implements Serializable {
     private int seq;
-    private ArrayList<SpenObjectStroke> strokes;
+    private ArrayList<StrokeModel> strokes;
 }

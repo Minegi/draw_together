@@ -10,7 +10,6 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -46,17 +45,22 @@ import com.samsung.android.sdk.pen.settingui.SpenSettingPenLayout;
 import com.samsung.hackathon.drawtogether.App;
 import com.samsung.hackathon.drawtogether.R;
 import com.samsung.hackathon.drawtogether.model.StepModel;
+import com.samsung.hackathon.drawtogether.model.StrokeModel;
 import com.samsung.hackathon.drawtogether.util.BitmapUtils;
 import com.samsung.hackathon.drawtogether.util.SPenSdkUtils;
+import com.samsung.hackathon.drawtogether.util.StrokeModelConvertUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
+import butterknife.ButterKnife;
 
 public class CreatorActivity extends AppCompatActivity {
 
@@ -72,8 +76,13 @@ public class CreatorActivity extends AppCompatActivity {
 
     private SpenPenPresetPreviewManager mPenPresetPreviewManager;
 
-    private ArrayList<SpenObjectStroke> mStrokeList;
+    private ArrayList<StrokeModel> mStrokeList;
+    /* [ReplayTest]
+    private ArrayList<StrokeModel> mDupStrokeList;
+    */
+
     private ArrayList<StepModel> mStepModelList;
+    private String mTempFileName;
 
     // constants
     private final int SPEN = SpenSettingViewInterface.TOOL_SPEN;
@@ -100,6 +109,13 @@ public class CreatorActivity extends AppCompatActivity {
     private ImageButton mShowPresetBtn;
     private ImageButton mAddPresetBtn;
     private Button mEditPresetBtn;
+
+    /* [ReplayTest]
+    private Button mStartRecordBtn;
+    private Button mStopRecordBtn;
+    private Button mStartReplayBtn;
+    private Button mStopReplayBtn;
+    */
 
     // dialogs
     private AlertDialog mDeleteAllDlg;
@@ -160,7 +176,8 @@ public class CreatorActivity extends AppCompatActivity {
         @Override
         public void onClick(final View view) {
             // TODO: 현재 테스트 용도로 사용 중
-            createThumbnail();
+            //createThumbnail();
+            //serializeStrokeData();
         }
     };
 
@@ -289,8 +306,17 @@ public class CreatorActivity extends AppCompatActivity {
                     final int objCnt = mSpenPageDoc.getObjectCount(SpenPageDoc.FIND_TYPE_ALL,
                             false);
                     App.L.d("[ObjectAdded] objCnt=" + objCnt);
-                    if (arrayList.get(arrayList.size() - 1) instanceof SpenObjectStroke) {
-                        mStrokeList.add((SpenObjectStroke) arrayList.get(arrayList.size() - 1));
+                    final SpenObjectStroke spenStrokeObj =
+                            (SpenObjectStroke) arrayList.get(arrayList.size() - 1);
+
+                    if (spenStrokeObj instanceof SpenObjectStroke) {
+                        final StrokeModel strokeModel =
+                                StrokeModelConvertUtils.convertToStrokeModel(spenStrokeObj);
+                        App.L.d(strokeModel.toString());
+                        mStrokeList.add(strokeModel);
+                        /* [ReplayTest]
+                        mDupStrokeList.add(strokeModel);
+                        */
                         App.L.d("[ObjectAdded] added!");
                     }
                 }
@@ -481,6 +507,59 @@ public class CreatorActivity extends AppCompatActivity {
         }
     };
 
+    /* [ReplayTest]
+    private View.OnClickListener mStartRecordBtnListener = new View.OnClickListener() {
+        @Override
+        public void onClick(final View view) {
+            if (mSpenPageDoc == null) {
+                return;
+            }
+
+            mSpenPageDoc.startRecord();
+
+            for (StrokeModel model : mDupStrokeList) {
+                App.L.d(model.toString());
+                mSpenPageDoc.appendObject(StrokeModelConvertUtils.convertToSpenObjectStroke(model));
+            }
+
+            mSpenPageDoc.stopRecord();
+        }
+    };
+
+    private View.OnClickListener mStopRecordBtnListener = new View.OnClickListener() {
+        @Override
+        public void onClick(final View view) {
+            if (mSpenPageDoc == null) {
+                return;
+            }
+
+            mSpenPageDoc.stopRecord();
+        }
+    };
+
+    private View.OnClickListener mStartReplayBtnListener = new View.OnClickListener() {
+        @Override
+        public void onClick(final View view) {
+            if (mSpenSurfaceView == null) {
+                return;
+            }
+
+            mSpenSurfaceView.startReplay();
+        }
+    };
+
+    private View.OnClickListener mStopReplayBtnListener = new View.OnClickListener() {
+        @Override
+        public void onClick(final View view) {
+            if (mSpenSurfaceView == null) {
+                return;
+            }
+
+            mSpenSurfaceView.stopReplay();
+        }
+    };
+    */
+
     private void selectPresetByIndex(final int selectedIdx) {
         final float density = getResources().getDisplayMetrics().density;
         for (int i = 0; i < mPresetLayout.getChildCount() - 1; ++i) {
@@ -562,6 +641,8 @@ public class CreatorActivity extends AppCompatActivity {
         mSpenViewContainer = (FrameLayout) findViewById(R.id.spen_view_container);
         mSpenViewLayout = (RelativeLayout) findViewById(R.id.spen_view_layout);
 
+        ButterKnife.bind(this);
+
         initializeSpenSdk();
         createSpenSettingView();
         createSpenSurfaceView();
@@ -606,6 +687,7 @@ public class CreatorActivity extends AppCompatActivity {
             try {
                 mSpenNoteDoc.close();
             } catch (IOException e) {
+                App.L.e("IOException occurred");
                 e.printStackTrace();
             } finally {
                 mSpenNoteDoc = null;
@@ -631,12 +713,14 @@ public class CreatorActivity extends AppCompatActivity {
             mIsSpenFeatureEnabled = sPenPackage.isFeatureEnabled(Spen.DEVICE_PEN);
             App.L.d("isSpenFeatureEnabled=" + mIsSpenFeatureEnabled);
         } catch (SsdkUnsupportedException e) {
+            App.L.e("SsdkUnsupportedException occurred");
             if (SPenSdkUtils.processUnsupportedException(this, e)) {
                 mSpenSurfaceView.setToolTypeAction(SpenSurfaceView.TOOL_FINGER,
                         SpenSurfaceView.ACTION_STROKE);
                 Toast.makeText(mContext, R.string.cant_support_spen_sdk, Toast.LENGTH_LONG).show();
             }
         } catch (Exception e) {
+            App.L.e("Exception occurred");
             Toast.makeText(mContext, R.string.cant_initialize_spen_sdk, Toast.LENGTH_LONG).show();
             e.printStackTrace();
             finish();
@@ -679,6 +763,7 @@ public class CreatorActivity extends AppCompatActivity {
         try {
             mSpenNoteDoc = new SpenNoteDoc(mContext, rect.width(), rect.height());
         } catch (IOException e) {
+            App.L.e("IOException occurred");
             Toast.makeText(mContext, R.string.cant_create_note_doc, Toast.LENGTH_LONG).show();
             e.printStackTrace();
             finish();
@@ -773,6 +858,20 @@ public class CreatorActivity extends AppCompatActivity {
 
         mPresetLayout = (LinearLayout) findViewById(R.id.preset_layout);
 
+        /* [ReplayTest]
+        mStartRecordBtn = (Button) findViewById(R.id.test_start_record);
+        mStartRecordBtn.setOnClickListener(mStartRecordBtnListener);
+
+        mStopRecordBtn = (Button) findViewById(R.id.test_stop_record);
+        mStopRecordBtn.setOnClickListener(mStopRecordBtnListener);
+
+        mStartReplayBtn = (Button) findViewById(R.id.test_start_replay);
+        mStartReplayBtn.setOnClickListener(mStartReplayBtnListener);
+
+        mStopReplayBtn = (Button) findViewById(R.id.test_stop_replay);
+        mStopReplayBtn.setOnClickListener(mStopReplayBtnListener);
+        */
+
         selectButton(mPenBtn);
     }
 
@@ -804,12 +903,12 @@ public class CreatorActivity extends AppCompatActivity {
                     public void onClick(final DialogInterface dlg, int which) {
                         // 현재까지의 단계 저장 및 다음 단계로 이동
                         final StepModel step = new StepModel();
-                        step.setStrokes(new ArrayList<SpenObjectStroke>());
+                        step.setStrokes(new ArrayList<StrokeModel>());
                         step.getStrokes().addAll(mStrokeList);
                         mStrokeList.clear();
+                        mStepModelList.add(step);
                         App.L.d("step.getStrokes().size()=" + step.getStrokes().size()
                                 + ", mStepModelList.size()=" + mStepModelList.size());
-                        mStepModelList.add(step);
 
                         // 이전 step으로 undo가 되지 못하도록 설정하고 undo / redo 버튼의 상태를 갱신
                         mSpenPageDoc.clearHistory();
@@ -824,8 +923,12 @@ public class CreatorActivity extends AppCompatActivity {
 
     private void initializeStrokeDataModels() {
         App.L.d("");
-        mStrokeList = new ArrayList<SpenObjectStroke>();
+        mStrokeList = new ArrayList<StrokeModel>();
+        /* [ReplayTest]
+        mDupStrokeList = new ArrayList<StrokeModel>();
+        */
         mStepModelList = new ArrayList<StepModel>();
+        mTempFileName = UUID.randomUUID().toString();
     }
 
     private void loadFavoritePenList() {
@@ -1021,9 +1124,9 @@ public class CreatorActivity extends AppCompatActivity {
 
     private void createThumbnail() {
         if (mSpenSurfaceView != null) {
-            final String directoryPath = new StringBuilder(getExternalCacheDir().
-                    getAbsolutePath()).toString();
-            final String fileName = new String(UUID.randomUUID().toString() + ".png");
+            final String directoryPath = new StringBuilder(getExternalCacheDir()
+                    .getAbsolutePath()).toString();
+            final String fileName = new String(mTempFileName + ".png");
             App.L.d("directoryPath=" + directoryPath);
 
             File dir = null;
@@ -1046,15 +1149,50 @@ public class CreatorActivity extends AppCompatActivity {
                 scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
                 scaledBitmap.recycle();
             } catch (FileNotFoundException e) {
+                App.L.e("FileNotFoundException occurred");
                 e.printStackTrace();
             } catch (IOException e) {
+                App.L.e("IOException occurred");
                 e.printStackTrace();
             } finally {
                 try {
                     out.close();
                 } catch (Exception e) {
+                    App.L.e("Exception occurred");
                     e.printStackTrace();
                 }
+            }
+        }
+    }
+
+    private void serializeStrokeData() {
+        if (mStepModelList == null) {
+            App.L.warning("mStepModelList is null");
+            return;
+        }
+
+        ObjectOutputStream oos = null;
+        ByteArrayOutputStream baos = null;
+        try {
+            baos = new ByteArrayOutputStream();
+            oos = new ObjectOutputStream(baos);
+
+            oos.writeObject(mStepModelList);
+            App.L.d("baos.toByteArray().length=" + baos.toByteArray().length);
+
+        } catch (FileNotFoundException e) {
+            App.L.e("FileNotFoundException occurred");
+            e.printStackTrace();
+        } catch (IOException e) {
+            App.L.e("IOException occurred");
+            e.printStackTrace();
+        } finally {
+            try {
+                oos.close();
+                baos.close();
+            } catch (IOException e) {
+                App.L.e("IOException occurred");
+                e.printStackTrace();
             }
         }
     }
