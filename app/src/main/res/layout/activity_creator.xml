@@ -64,7 +64,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@drawable/selector_tool_bg"
-            android:src="@drawable/selector_capture"
+            android:src="@drawable/selector_save"
             android:layout_margin="1dip"
             android:contentDescription="@string/cd_save"
             />

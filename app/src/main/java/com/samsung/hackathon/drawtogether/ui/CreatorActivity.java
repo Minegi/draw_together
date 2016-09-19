@@ -314,6 +314,15 @@ public class CreatorActivity extends AppCompatActivity {
                                 StrokeModelConvertUtils.convertToStrokeModel(spenStrokeObj);
                         App.L.d(strokeModel.toString());
                         mStrokeList.add(strokeModel);
+
+                        if (!mStrokeList.isEmpty()) {
+                            mNextStepBtn.setAlpha(1.0f);
+                            mNextStepBtn.setEnabled(true);
+                        } else {
+                            mNextStepBtn.setAlpha(0.3f);
+                            mNextStepBtn.setEnabled(true);
+                        }
+
                         /* [ReplayTest]
                         mDupStrokeList.add(strokeModel);
                         */
@@ -333,6 +342,14 @@ public class CreatorActivity extends AppCompatActivity {
                             false);
                     App.L.d("[ObjectRemoved] objCnt=" + objCnt);
                     mStrokeList.remove(mStrokeList.size() - 1);
+
+                    if (!mStrokeList.isEmpty()) {
+                        mNextStepBtn.setAlpha(1.0f);
+                        mNextStepBtn.setEnabled(true);
+                    } else {
+                        mNextStepBtn.setAlpha(0.3f);
+                        mNextStepBtn.setEnabled(true);
+                    }
                     App.L.d("[ObjectRemoved] removed!");
                 }
 
@@ -833,6 +850,8 @@ public class CreatorActivity extends AppCompatActivity {
 
         mNextStepBtn = (ImageButton) findViewById(R.id.next_step_btn);
         mNextStepBtn.setOnClickListener(mNextStepBtnClickListener);
+        mNextStepBtn.setAlpha(0.3f);
+        mNextStepBtn.setEnabled(false);
 
         mAddPresetBtn = (ImageButton) findViewById(R.id.add_preset_btn);
         mAddPresetBtn.setOnClickListener(mAddPresetListener);
@@ -889,6 +908,8 @@ public class CreatorActivity extends AppCompatActivity {
                         mSpenPageDoc.clearHistory();
                         mStrokeList.clear();
                         mStepModelList.clear();
+                        mNextStepBtn.setAlpha(0.3f);
+                        mNextStepBtn.setEnabled(false);
                     }
                 })
                 .setNegativeButton(R.string.dlg_no, null)
@@ -900,7 +921,7 @@ public class CreatorActivity extends AppCompatActivity {
                 .setMessage(R.string.dlg_next_step_description)
                 .setPositiveButton(R.string.dlg_yes, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(final DialogInterface dlg, int which) {
+                    public void onClick(final DialogInterface dlg, final int which) {
                         // 현재까지의 단계 저장 및 다음 단계로 이동
                         final StepModel step = new StepModel();
                         step.setStrokes(new ArrayList<StrokeModel>());
@@ -915,6 +936,8 @@ public class CreatorActivity extends AppCompatActivity {
 
                         mUndoBtn.setEnabled(mSpenPageDoc.isUndoable());
                         mRedoBtn.setEnabled(mSpenPageDoc.isRedoable());
+                        mNextStepBtn.setAlpha(0.3f);
+                        mNextStepBtn.setEnabled(false);
                     }
                 })
                 .setNegativeButton(R.string.dlg_no, null)
