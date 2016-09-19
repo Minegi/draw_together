@@ -77,7 +77,6 @@ public class ServerInterface {
         RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), file);
         MultipartBody.Part body = MultipartBody.Part.createFormData("uploadFile", file.getName(), requestFile);
 
-
         Call<ResponseBody> call = mServerAPI.uploadFile(file.getName(), body);
         call.enqueue(new Callback<ResponseBody>() {
             @Override

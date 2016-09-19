@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -44,6 +45,7 @@ import com.samsung.android.sdk.pen.settingui.SpenSettingEraserLayout;
 import com.samsung.android.sdk.pen.settingui.SpenSettingPenLayout;
 import com.samsung.hackathon.drawtogether.App;
 import com.samsung.hackathon.drawtogether.R;
+import com.samsung.hackathon.drawtogether.communication.ServerInterface.ServerApiEventListener;
 import com.samsung.hackathon.drawtogether.model.StepModel;
 import com.samsung.hackathon.drawtogether.model.StrokeModel;
 import com.samsung.hackathon.drawtogether.util.BitmapUtils;
@@ -56,11 +58,15 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.nio.BufferUnderflowException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import butterknife.ButterKnife;
+import okhttp3.ResponseBody;
+import retrofit2.Response;
 
 public class CreatorActivity extends AppCompatActivity {
 
@@ -118,6 +124,7 @@ public class CreatorActivity extends AppCompatActivity {
     */
 
     // dialogs
+    private AlertDialog mUploadConfirmDlg;
     private AlertDialog mDeleteAllDlg;
     private AlertDialog mNextStepDlg;
 
@@ -175,9 +182,14 @@ public class CreatorActivity extends AppCompatActivity {
     private final View.OnClickListener mSaveBtnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(final View view) {
-            // TODO: 현재 테스트 용도로 사용 중
-            //createThumbnail();
-            //serializeStrokeData();
+            if (isStrokeDataExist()) {
+                if (mUploadConfirmDlg != null) {
+                    mUploadConfirmDlg.show();
+                }
+            } else {
+                Toast.makeText(CreatorActivity.this, R.string.draw_data_isnt_exist,
+                        Toast.LENGTH_LONG).show();
+            }
         }
     };
 
@@ -523,6 +535,21 @@ public class CreatorActivity extends AppCompatActivity {
             return false;
         }
     };
+
+    private ServerApiEventListener<ResponseBody> mFileUploadEventListener =
+            new ServerApiEventListener<ResponseBody>() {
+                @Override
+                public void onResponse(final Response<ResponseBody> response) {
+                    App.L.d("response.code()=" + response.code());
+                    Toast.makeText(mContext, R.string.upload_complete, Toast.LENGTH_LONG).show();
+                }
+
+                @Override
+                public void onFailure(final Throwable t) {
+                    App.L.e(t.getMessage());
+                    Toast.makeText(mContext, R.string.cant_upload_file, Toast.LENGTH_LONG).show();
+                }
+            };
 
     /* [ReplayTest]
     private View.OnClickListener mStartRecordBtnListener = new View.OnClickListener() {
@@ -922,22 +949,64 @@ public class CreatorActivity extends AppCompatActivity {
                 .setPositiveButton(R.string.dlg_yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(final DialogInterface dlg, final int which) {
-                        // 현재까지의 단계 저장 및 다음 단계로 이동
-                        final StepModel step = new StepModel();
-                        step.setStrokes(new ArrayList<StrokeModel>());
-                        step.getStrokes().addAll(mStrokeList);
-                        mStrokeList.clear();
-                        mStepModelList.add(step);
-                        App.L.d("step.getStrokes().size()=" + step.getStrokes().size()
-                                + ", mStepModelList.size()=" + mStepModelList.size());
+                        addStrokeModelToStepModel();
+                    }
+                })
+                .setNegativeButton(R.string.dlg_no, null)
+                .create();
 
-                        // 이전 step으로 undo가 되지 못하도록 설정하고 undo / redo 버튼의 상태를 갱신
-                        mSpenPageDoc.clearHistory();
+        mUploadConfirmDlg = new AlertDialog.Builder(CreatorActivity.this,
+                R.style.DialogTheme)
+                .setTitle(R.string.cd_save)
+                .setMessage(R.string.dlg_save_and_upload_description)
+                .setPositiveButton(R.string.dlg_yes, new DialogInterface.OnClickListener() {
 
-                        mUndoBtn.setEnabled(mSpenPageDoc.isUndoable());
-                        mRedoBtn.setEnabled(mSpenPageDoc.isRedoable());
-                        mNextStepBtn.setAlpha(0.3f);
-                        mNextStepBtn.setEnabled(false);
+                    @Override
+                    public void onClick(final DialogInterface dlg, final int which) {
+                        // TODO: 오래 걸리니깐 워커 쓰레드에서 수행하도록 변경 필요. 아직은 테스트 중
+
+                        // 중간저장하지 않은 판서 데이터가 있다면 stepModel에 저장
+                        if (!mStrokeList.isEmpty()) {
+                            addStrokeModelToStepModel();
+                        }
+
+                        final Bitmap thumbnail = createThumbnail();
+                        if (thumbnail == null) {
+                            App.L.e("thumbnail is null");
+                            Toast.makeText(CreatorActivity.this, R.string.cant_upload_file,
+                                    Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
+                        final ByteBuffer byteBuffer = ByteBuffer.allocate(thumbnail.getByteCount());
+                        thumbnail.copyPixelsToBuffer(byteBuffer);
+
+                        if (byteBuffer.hasArray()) {
+                            try {
+                                // TODO: byte array로 만들어서 write
+                            } catch (BufferUnderflowException e) {
+                                App.L.e("BufferUnderflowException occurred");
+                                e.printStackTrace();
+                            }
+                        }
+
+                        final byte[] strokeData = serializeStrokeData();
+
+                        if (strokeData == null) {
+                            App.L.e("strokeData is null");
+                            Toast.makeText(CreatorActivity.this, R.string.cant_upload_file,
+                                    Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
+                        App.L.d("thumbnailSize=" + thumbnail.getByteCount() + ", strokeDataSize="
+                                + strokeData.length);
+
+                        // TODO: 판서 데이터와 썸네일 서버로 전송
+
+                        if (thumbnail.isRecycled()) {
+                            thumbnail.recycle();
+                        }
                     }
                 })
                 .setNegativeButton(R.string.dlg_no, null)
@@ -1053,6 +1122,7 @@ public class CreatorActivity extends AppCompatActivity {
         mEraserBtn.setEnabled(isEnable);
         mUndoBtn.setEnabled(isEnable && mSpenPageDoc.isUndoable());
         mRedoBtn.setEnabled(isEnable && mSpenPageDoc.isRedoable());
+        mSaveBtn.setEnabled(isEnable);
     }
 
     private void closeOtherSettingView(final View view) {
@@ -1145,7 +1215,7 @@ public class CreatorActivity extends AppCompatActivity {
         mShowPresetBtn.setVisibility(View.VISIBLE);
     }
 
-    private void createThumbnail() {
+    private Bitmap createThumbnail() {
         if (mSpenSurfaceView != null) {
             final String directoryPath = new StringBuilder(getExternalCacheDir()
                     .getAbsolutePath()).toString();
@@ -1170,7 +1240,7 @@ public class CreatorActivity extends AppCompatActivity {
                 final Bitmap scaledBitmap = Bitmap.createScaledBitmap(
                         mSpenSurfaceView.capturePage(1.0f), (int)width, (int)height, true);
                 scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-                scaledBitmap.recycle();
+                return scaledBitmap;
             } catch (FileNotFoundException e) {
                 App.L.e("FileNotFoundException occurred");
                 e.printStackTrace();
@@ -1186,12 +1256,13 @@ public class CreatorActivity extends AppCompatActivity {
                 }
             }
         }
+        return null;
     }
 
-    private void serializeStrokeData() {
+    private byte[] serializeStrokeData() {
         if (mStepModelList == null) {
             App.L.warning("mStepModelList is null");
-            return;
+            return null;
         }
 
         ObjectOutputStream oos = null;
@@ -1202,6 +1273,7 @@ public class CreatorActivity extends AppCompatActivity {
 
             oos.writeObject(mStepModelList);
             App.L.d("baos.toByteArray().length=" + baos.toByteArray().length);
+            return baos.toByteArray();
 
         } catch (FileNotFoundException e) {
             App.L.e("FileNotFoundException occurred");
@@ -1218,5 +1290,34 @@ public class CreatorActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+
+        return null;
+    }
+
+    private boolean isStrokeDataExist() {
+        if (mStrokeList == null || mStepModelList == null) {
+            return false;
+        }
+
+        return !mStrokeList.isEmpty() || !mStepModelList.isEmpty();
+    }
+
+    private void addStrokeModelToStepModel() {
+        // 현재까지의 단계를 저장
+        final StepModel step = new StepModel();
+        step.setStrokes(new ArrayList<StrokeModel>());
+        step.getStrokes().addAll(mStrokeList);
+        mStrokeList.clear();
+        mStepModelList.add(step);
+        App.L.d("step.getStrokes().size()=" + step.getStrokes().size()
+                + ", mStepModelList.size()=" + mStepModelList.size());
+
+        // 이전 step으로 undo가 되지 못하도록 설정하고 undo / redo 버튼의 상태를 갱신
+        mSpenPageDoc.clearHistory();
+
+        mUndoBtn.setEnabled(mSpenPageDoc.isUndoable());
+        mRedoBtn.setEnabled(mSpenPageDoc.isRedoable());
+        mNextStepBtn.setAlpha(0.3f);
+        mNextStepBtn.setEnabled(false);
     }
 }

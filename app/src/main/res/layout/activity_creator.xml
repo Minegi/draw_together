@@ -157,8 +157,8 @@
             android:layout_marginRight="10dip"
             android:background="@drawable/circle_btn"
             android:scaleType="fitXY"
-            android:src="@drawable/circle_btn_favorite_pen"
-            android:contentDescription="@string/next_step"
+            android:src="@drawable/circle_btn_next_step"
+            android:contentDescription="@string/save_and_make_next_step"
             />
 
         <LinearLayout

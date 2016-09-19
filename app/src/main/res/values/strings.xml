@@ -13,6 +13,8 @@
     <string name="device_doesnt_support_spen">Device doesn\'t support Spen.</string>
     <string name="preset_is_full">Maximum of pens is %s.</string>
     <string name="is_already_exist_same_pen">Already exists.</string>
+    <string name="cant_upload_file">업로드에 실패했습니다.</string>
+    <string name="upload_complete">업로드를 완료하였습니다.</string>
 
     <string name="edit">편집</string>
     <string name="done">완료</string>
@@ -22,6 +24,7 @@
     <string name="prefname_favorite_pen">sharedpref_favorite_pen</string>
     <string name="prefattr_favorite_pen_size">favorite_pen_size</string>
 
+    <!-- pen names in used Pen SDK-->
     <string name="pencil_path">com.samsung.android.sdk.pen.pen.preload.Pencil</string>
     <string name="ink_pen_path">com.samsung.android.sdk.pen.pen.preload.InkPen</string>
     <string name="marker_path">com.samsung.android.sdk.pen.pen.preload.Marker</string>
@@ -41,7 +44,7 @@
     <string name="cd_show_preset">프리셋 보기</string>
     <string name="cd_edit_preset">프리셋 편집</string>
     <string name="cd_add_preset">프리셋 추가</string>
-    <string name="next_step">다음 단계로</string>
+    <string name="save_and_make_next_step">저장 후 다음 단계 생성</string>
 
     <!-- Dialog -->
     <string name="dlg_delete_all">모두 삭제</string>
@@ -50,5 +53,8 @@
     <string name="dlg_no">아니오</string>
     <string name="dlg_next_step">다음 단계로 이동</string>
     <string name="dlg_next_step_description">현재까지의 내용을 저장하고 다음 단계를 작성하시겠습니까? 다음 단계로 넘어가면 이전 단계로 돌아갈 수 없습니다.</string>
+    <string name="dlg_save_and_upload_description">현재까지의 내용을 저장하고 마켓에 업로드하시겠습니까?</string>
+    <string name="draw_data_isnt_exist">업로드할 작업물이 없습니다.</string>
+
 
 </resources>
