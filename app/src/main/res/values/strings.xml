@@ -46,6 +46,7 @@
     <string name="cd_add_preset">프리셋 추가</string>
     <string name="cd_replay">리플레이</string>
     <string name="cd_save_and_make_next_step">저장 후 다음 단계 생성</string>
+    <string name="cd_load_next_step">다음 단계 불러오기</string>
 
     <!-- Dialog -->
     <string name="dlg_delete_all">모두 삭제</string>
