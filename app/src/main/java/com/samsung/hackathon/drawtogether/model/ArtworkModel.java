@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import lombok.Data;
 
-@Data
+@Deprecated
 public class ArtworkModel {
     private int seq;
     private ArrayList<StepModel> steps;

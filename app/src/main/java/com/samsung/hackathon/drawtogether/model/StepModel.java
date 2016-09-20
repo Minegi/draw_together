@@ -1,12 +1,12 @@
 package com.samsung.hackathon.drawtogether.model;
 
-
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import lombok.Data;
 
 @Data
-public class StepModel {
+public class StepModel implements Serializable {
     private int seq;
-    private ArrayList<Drawable> strokes;
+    private ArrayList<StrokeModel> strokes;
 }

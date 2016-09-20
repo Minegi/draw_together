@@ -1,12 +1,7 @@
 @startuml
-class Point {
-    - float x
-    - float y
-}
 
-abstract class Drawable {
-    # int seq
-    # ArrayList<Point> points
+class SpenObjectStroke {
+
 }
 
 class StrokeModel {
@@ -14,28 +9,38 @@ class StrokeModel {
     - int color
     - float size
     - String advancedSetting
+    - int mUserId
+    - String mDefaultePenName
+    - String mPenName
+    - float mPenSize
+    - int mColor
+    - String mAdvancedPenSetting
+    - float[] mXPoints
+    - float[] mYPoints
+    - float[] mPressures
+    - int[] mTimeStamps
+    - float[] mTilts
+    - float[] mOrientations
+    - int mToolType
+    - float mRotation
+    - int mResizeOption
+    - float[] mRect
 }
-
-class EraseModel {
-    - float size
-}
-
-StrokeModel -up-|> Drawable
-EraseModel -up-|> Drawable
 
 class StepModel {
     - int seq
     - ArrayList<StrokeModel> strokes
 }
 
-StepModel --o Drawable
-
-class ArtworkModel {
-    int seq
-    ArrayList<StepModel> steps
+class StrokeModelConvertUtils {
+    + {static} StrokeModel convertToStrokeModel(final SpenObjectStroke spenStroke)
+    + {static} SpenObjectStroke convertToSpenObjectStroke(final StrokeModel stroke)
 }
 
-ArtworkModel --o StepModel
+StepModel "1" --o "1..n" StrokeModel
+
+StrokeModelConvertUtils --> StrokeModel
+StrokeModelConvertUtils --> SpenObjectStroke
 
 
 @enduml

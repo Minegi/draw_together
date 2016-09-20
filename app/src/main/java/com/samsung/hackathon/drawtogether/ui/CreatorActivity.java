@@ -1,14 +1,18 @@
 package com.samsung.hackathon.drawtogether.ui;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Display;
 import android.view.LayoutInflater;
@@ -29,6 +33,8 @@ import com.samsung.android.sdk.pen.SpenSettingEraserInfo;
 import com.samsung.android.sdk.pen.SpenSettingPenInfo;
 import com.samsung.android.sdk.pen.SpenSettingViewInterface;
 import com.samsung.android.sdk.pen.document.SpenNoteDoc;
+import com.samsung.android.sdk.pen.document.SpenObjectBase;
+import com.samsung.android.sdk.pen.document.SpenObjectStroke;
 import com.samsung.android.sdk.pen.document.SpenPageDoc;
 import com.samsung.android.sdk.pen.engine.SpenColorPickerListener;
 import com.samsung.android.sdk.pen.engine.SpenPenChangeListener;
@@ -39,14 +45,30 @@ import com.samsung.android.sdk.pen.settingui.SpenSettingEraserLayout;
 import com.samsung.android.sdk.pen.settingui.SpenSettingPenLayout;
 import com.samsung.hackathon.drawtogether.App;
 import com.samsung.hackathon.drawtogether.R;
+import com.samsung.hackathon.drawtogether.communication.ServerInterface.ServerApiEventListener;
+import com.samsung.hackathon.drawtogether.model.StepModel;
+import com.samsung.hackathon.drawtogether.model.StrokeModel;
 import com.samsung.hackathon.drawtogether.util.BitmapUtils;
 import com.samsung.hackathon.drawtogether.util.SPenSdkUtils;
+import com.samsung.hackathon.drawtogether.util.StrokeModelConvertUtils;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.nio.BufferUnderflowException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
-public class CreateorActivity extends AppCompatActivity {
+import butterknife.ButterKnife;
+import okhttp3.ResponseBody;
+import retrofit2.Response;
+
+public class CreatorActivity extends AppCompatActivity {
 
     private Context mContext;
 
@@ -59,6 +81,14 @@ public class CreateorActivity extends AppCompatActivity {
     private List<SpenSettingPenInfo> mFavoritePenList;
 
     private SpenPenPresetPreviewManager mPenPresetPreviewManager;
+
+    private ArrayList<StrokeModel> mStrokeList;
+    /* [ReplayTest]
+    private ArrayList<StrokeModel> mDupStrokeList;
+    */
+
+    private ArrayList<StepModel> mStepModelList;
+    private String mTempFileName;
 
     // constants
     private final int SPEN = SpenSettingViewInterface.TOOL_SPEN;
@@ -76,13 +106,27 @@ public class CreateorActivity extends AppCompatActivity {
     private LinearLayout mPresetLayout;
 
     // buttons
-    private ImageView mPenBtn;
-    private ImageView mEraserBtn;
-    private ImageView mUndoBtn;
-    private ImageView mRedoBtn;
+    private ImageButton mPenBtn;
+    private ImageButton mEraserBtn;
+    private ImageButton mUndoBtn;
+    private ImageButton mRedoBtn;
+    private ImageButton mSaveBtn;
+    private ImageButton mNextStepBtn;
     private ImageButton mShowPresetBtn;
     private ImageButton mAddPresetBtn;
     private Button mEditPresetBtn;
+
+    /* [ReplayTest]
+    private Button mStartRecordBtn;
+    private Button mStopRecordBtn;
+    private Button mStartReplayBtn;
+    private Button mStopReplayBtn;
+    */
+
+    // dialogs
+    private AlertDialog mUploadConfirmDlg;
+    private AlertDialog mDeleteAllDlg;
+    private AlertDialog mNextStepDlg;
 
     // listeners
     private final View.OnClickListener mPenBtnClickListener = new View.OnClickListener() {
@@ -135,6 +179,20 @@ public class CreateorActivity extends AppCompatActivity {
         }
     };
 
+    private final View.OnClickListener mSaveBtnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(final View view) {
+            if (isStrokeDataExist()) {
+                if (mUploadConfirmDlg != null) {
+                    mUploadConfirmDlg.show();
+                }
+            } else {
+                Toast.makeText(CreatorActivity.this, R.string.draw_data_isnt_exist,
+                        Toast.LENGTH_LONG).show();
+            }
+        }
+    };
+
     private final SpenSettingPenLayout.PresetListener mPresetListener
             = new SpenSettingPenLayout.PresetListener() {
         @Override
@@ -156,6 +214,9 @@ public class CreateorActivity extends AppCompatActivity {
                     }
                 }
 
+                App.L.d("[PenPresetAdded] name=" + info.name + ",color="
+                        + Integer.toHexString(info.color) + ",size=" + info.size
+                        + ",advSetting=" + info.advancedSetting);
                 final SpenSettingPenInfo tmpInfo = new SpenSettingPenInfo();
                 tmpInfo.name = info.name;
                 tmpInfo.color = info.color;
@@ -165,6 +226,7 @@ public class CreateorActivity extends AppCompatActivity {
                 mFavoritePenList.add(tmpInfo);
             }
             mPenSettingView.setVisibility(View.GONE);
+            mEraserSettingView.setVisibility(View.GONE);
             initializePresetLayout();
         }
 
@@ -201,9 +263,9 @@ public class CreateorActivity extends AppCompatActivity {
             new SpenSettingEraserLayout.EventListener() {
         @Override
         public void onClearAll() {
-            // TODO: [Low] 모두 지우시겠습니까? 같은 confirm dialog 달아야 됨
-            mSpenPageDoc.removeAllObject();
-            mSpenSurfaceView.update();
+            if (mDeleteAllDlg != null) {
+                mDeleteAllDlg.show();
+            }
         }
     };
 
@@ -243,6 +305,81 @@ public class CreateorActivity extends AppCompatActivity {
         }
     };
 
+    private final SpenPageDoc.ObjectListener mSpenObjectEventListener =
+            new SpenPageDoc.ObjectListener() {
+                @Override
+                public void onObjectAdded(final SpenPageDoc spenPageDoc,
+                                          final ArrayList<SpenObjectBase> arrayList,
+                                          final int type) {
+                    if (mStrokeList == null) {
+                        return;
+                    }
+
+                    final int objCnt = mSpenPageDoc.getObjectCount(SpenPageDoc.FIND_TYPE_ALL,
+                            false);
+                    App.L.d("[ObjectAdded] objCnt=" + objCnt);
+                    final SpenObjectStroke spenStrokeObj =
+                            (SpenObjectStroke) arrayList.get(arrayList.size() - 1);
+
+                    if (spenStrokeObj instanceof SpenObjectStroke) {
+                        final StrokeModel strokeModel =
+                                StrokeModelConvertUtils.convertToStrokeModel(spenStrokeObj);
+                        App.L.d(strokeModel.toString());
+                        mStrokeList.add(strokeModel);
+
+                        if (!mStrokeList.isEmpty()) {
+                            mNextStepBtn.setAlpha(1.0f);
+                            mNextStepBtn.setEnabled(true);
+                        } else {
+                            mNextStepBtn.setAlpha(0.3f);
+                            mNextStepBtn.setEnabled(true);
+                        }
+
+                        /* [ReplayTest]
+                        mDupStrokeList.add(strokeModel);
+                        */
+                        App.L.d("[ObjectAdded] added!");
+                    }
+                }
+
+                @Override
+                public void onObjectRemoved(final SpenPageDoc spenPageDoc,
+                                            final ArrayList<SpenObjectBase> arrayList,
+                                            final int type) {
+                    if (mStrokeList == null) {
+                        return;
+                    }
+
+                    final int objCnt = mSpenPageDoc.getObjectCount(SpenPageDoc.FIND_TYPE_ALL,
+                            false);
+                    App.L.d("[ObjectRemoved] objCnt=" + objCnt);
+                    mStrokeList.remove(mStrokeList.size() - 1);
+
+                    if (!mStrokeList.isEmpty()) {
+                        mNextStepBtn.setAlpha(1.0f);
+                        mNextStepBtn.setEnabled(true);
+                    } else {
+                        mNextStepBtn.setAlpha(0.3f);
+                        mNextStepBtn.setEnabled(true);
+                    }
+                    App.L.d("[ObjectRemoved] removed!");
+                }
+
+                @Override
+                public void onObjectChanged(final SpenPageDoc spenPageDoc,
+                                            final SpenObjectBase spenObjectBase,
+                                            final int type) {
+                    if (mStrokeList == null) {
+                        return;
+                    }
+
+                    App.L.d("[ObjectChanged] start");
+                    final int objCnt = mSpenPageDoc.getObjectCount(SpenPageDoc.FIND_TYPE_ALL,
+                            false);
+                    App.L.d("[ObjCnt] " + objCnt);
+                }
+            };
+
     private final View.OnClickListener mShowPresetListener = new View.OnClickListener() {
         @Override
         public void onClick(final View view) {
@@ -250,6 +387,15 @@ public class CreateorActivity extends AppCompatActivity {
             mEditPresetBtn.setVisibility(View.VISIBLE);
             mPresetLayout.setVisibility(View.VISIBLE);
             setPresetViewMode(PRESET_MODE_VIEW);
+        }
+    };
+
+    private final View.OnClickListener mNextStepBtnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(final View view) {
+            if (mNextStepDlg != null) {
+                mNextStepDlg.show();
+            }
         }
     };
 
@@ -363,18 +509,100 @@ public class CreateorActivity extends AppCompatActivity {
     private final View.OnTouchListener mTouchSurfaceViewListener = new View.OnTouchListener() {
         @Override
         public boolean onTouch(final View view, final MotionEvent event) {
-            // Draw 중에는 preset 관련 레이아웃은 GONE 상태로 설정한다.
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                if (mSpenSurfaceView.getToolTypeAction(SPEN) == SpenSurfaceView.ACTION_STROKE) {
-                    mPenSettingView.setVisibility(View.GONE);
-                    mPresetLayout.setVisibility(View.GONE);
-                    mEditPresetBtn.setVisibility(View.GONE);
-                    mShowPresetBtn.setVisibility(View.VISIBLE);
+            if (mSpenSurfaceView == null || mSpenPageDoc == null) {
+                return false;
+            }
+
+            final int pointerIdx = 0;
+
+            // 펜 데이터만 처리
+            if (event.getToolType(pointerIdx) != MotionEvent.TOOL_TYPE_STYLUS) {
+                closePresetLayout();
+                return false;
+            }
+
+            final int action = event.getAction();
+            final int penAction = mSpenSurfaceView.getToolTypeAction(SPEN);
+
+            if (action == MotionEvent.ACTION_DOWN) {
+                if (penAction == SpenSurfaceView.ACTION_STROKE
+                        || penAction == SpenSurfaceView.ACTION_ERASER) {
+                    // Stroke or Erase 중에는 preset layout은 GONE 상태로 설정한다.
+                    closePresetLayout();
                 }
             }
+
             return false;
         }
     };
+
+    private ServerApiEventListener<ResponseBody> mFileUploadEventListener =
+            new ServerApiEventListener<ResponseBody>() {
+                @Override
+                public void onResponse(final Response<ResponseBody> response) {
+                    App.L.d("response.code()=" + response.code());
+                    Toast.makeText(mContext, R.string.upload_complete, Toast.LENGTH_LONG).show();
+                }
+
+                @Override
+                public void onFailure(final Throwable t) {
+                    App.L.e(t.getMessage());
+                    Toast.makeText(mContext, R.string.cant_upload_file, Toast.LENGTH_LONG).show();
+                }
+            };
+
+    /* [ReplayTest]
+    private View.OnClickListener mStartRecordBtnListener = new View.OnClickListener() {
+        @Override
+        public void onClick(final View view) {
+            if (mSpenPageDoc == null) {
+                return;
+            }
+
+            mSpenPageDoc.startRecord();
+
+            for (StrokeModel model : mDupStrokeList) {
+                App.L.d(model.toString());
+                mSpenPageDoc.appendObject(StrokeModelConvertUtils.convertToSpenObjectStroke(model));
+            }
+
+            mSpenPageDoc.stopRecord();
+        }
+    };
+
+    private View.OnClickListener mStopRecordBtnListener = new View.OnClickListener() {
+        @Override
+        public void onClick(final View view) {
+            if (mSpenPageDoc == null) {
+                return;
+            }
+
+            mSpenPageDoc.stopRecord();
+        }
+    };
+
+    private View.OnClickListener mStartReplayBtnListener = new View.OnClickListener() {
+        @Override
+        public void onClick(final View view) {
+            if (mSpenSurfaceView == null) {
+                return;
+            }
+
+            mSpenSurfaceView.startReplay();
+        }
+    };
+
+    private View.OnClickListener mStopReplayBtnListener = new View.OnClickListener() {
+        @Override
+        public void onClick(final View view) {
+            if (mSpenSurfaceView == null) {
+                return;
+            }
+
+            mSpenSurfaceView.stopReplay();
+        }
+    };
+    */
 
     private void selectPresetByIndex(final int selectedIdx) {
         final float density = getResources().getDisplayMetrics().density;
@@ -449,13 +677,15 @@ public class CreateorActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
-        App.L.debug("onCreate()");
+        App.L.d("");
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_draw);
+        setContentView(R.layout.activity_creator);
         mContext = getApplicationContext();
 
         mSpenViewContainer = (FrameLayout) findViewById(R.id.spen_view_container);
         mSpenViewLayout = (RelativeLayout) findViewById(R.id.spen_view_layout);
+
+        ButterKnife.bind(this);
 
         initializeSpenSdk();
         createSpenSettingView();
@@ -465,6 +695,8 @@ public class CreateorActivity extends AppCompatActivity {
         initializeSettingInfo();
 
         initializeOtherViews();
+        createDialogs();
+        initializeStrokeDataModels();
         loadFavoritePenList();
 
         mPenPresetPreviewManager = new SpenPenPresetPreviewManager(mContext);
@@ -473,15 +705,19 @@ public class CreateorActivity extends AppCompatActivity {
         setPresetViewMode(PRESET_MODE_VIEW);
     }
 
+
+
+
     @Override
     protected void onPause() {
+        App.L.d("");
         super.onPause();
         savePreset();
     }
 
     @Override
     protected void onDestroy() {
-        App.L.debug("onDestroy()");
+        App.L.d("");
         super.onDestroy();
 
         // destroy SpenSurfaceView
@@ -495,6 +731,7 @@ public class CreateorActivity extends AppCompatActivity {
             try {
                 mSpenNoteDoc.close();
             } catch (IOException e) {
+                App.L.e("IOException occurred");
                 e.printStackTrace();
             } finally {
                 mSpenNoteDoc = null;
@@ -511,7 +748,7 @@ public class CreateorActivity extends AppCompatActivity {
     }
 
     private void initializeSpenSdk() {
-        App.L.d("initializeSpenSdk()");
+        App.L.d("");
 
         mIsSpenFeatureEnabled = false;
         Spen sPenPackage = new Spen();
@@ -520,11 +757,14 @@ public class CreateorActivity extends AppCompatActivity {
             mIsSpenFeatureEnabled = sPenPackage.isFeatureEnabled(Spen.DEVICE_PEN);
             App.L.d("isSpenFeatureEnabled=" + mIsSpenFeatureEnabled);
         } catch (SsdkUnsupportedException e) {
+            App.L.e("SsdkUnsupportedException occurred");
             if (SPenSdkUtils.processUnsupportedException(this, e)) {
+                mSpenSurfaceView.setToolTypeAction(SpenSurfaceView.TOOL_FINGER,
+                        SpenSurfaceView.ACTION_STROKE);
                 Toast.makeText(mContext, R.string.cant_support_spen_sdk, Toast.LENGTH_LONG).show();
-                finish();
             }
         } catch (Exception e) {
+            App.L.e("Exception occurred");
             Toast.makeText(mContext, R.string.cant_initialize_spen_sdk, Toast.LENGTH_LONG).show();
             e.printStackTrace();
             finish();
@@ -532,7 +772,7 @@ public class CreateorActivity extends AppCompatActivity {
     }
 
     private void createSpenSettingView() {
-        App.L.d("createSpenSettingView()");
+        App.L.d("");
 
         mPenSettingView = new SpenSettingPenLayout(mContext, "", mSpenViewLayout);
         mEraserSettingView = new SpenSettingEraserLayout(mContext, "", mSpenViewLayout);
@@ -542,7 +782,7 @@ public class CreateorActivity extends AppCompatActivity {
     }
 
     private void createSpenSurfaceView() {
-        App.L.d("createSpenSurfaceView()");
+        App.L.d("");
 
         mSpenSurfaceView = new SpenSurfaceView(mContext);
 
@@ -559,7 +799,7 @@ public class CreateorActivity extends AppCompatActivity {
     }
 
     private void createSpenNoteDoc() {
-        App.L.d("createSpenNoteDoc()");
+        App.L.d("");
         Display display = getWindowManager().getDefaultDisplay();
         Rect rect = new Rect();
         display.getRectSize(rect);
@@ -567,6 +807,7 @@ public class CreateorActivity extends AppCompatActivity {
         try {
             mSpenNoteDoc = new SpenNoteDoc(mContext, rect.width(), rect.height());
         } catch (IOException e) {
+            App.L.e("IOException occurred");
             Toast.makeText(mContext, R.string.cant_create_note_doc, Toast.LENGTH_LONG).show();
             e.printStackTrace();
             finish();
@@ -574,7 +815,7 @@ public class CreateorActivity extends AppCompatActivity {
     }
 
     private void createSpenPageDoc() {
-        App.L.d("createSpenPageDoc()");
+        App.L.d("");
         // append first page
         mSpenPageDoc = mSpenNoteDoc.appendPage();
         mSpenPageDoc.setBackgroundColor(ContextCompat.getColor(this, R.color.white));
@@ -584,15 +825,13 @@ public class CreateorActivity extends AppCompatActivity {
 
         // 아직까지는 Spen 모드만 지원한다
         if (!mIsSpenFeatureEnabled) {
-            mSpenSurfaceView.setToolTypeAction(SpenSurfaceView.TOOL_FINGER,
-                    SpenSurfaceView.ACTION_STROKE);
             Toast.makeText(mContext, R.string.device_doesnt_support_spen, Toast.LENGTH_LONG).show();
             finish();
         }
     }
 
     private void initializeSettingInfo() {
-        App.L.d("initializeSettingInfo()");
+        App.L.d("");
 
         // pen setting
         final SpenSettingPenInfo penInfo = new SpenSettingPenInfo();
@@ -614,21 +853,32 @@ public class CreateorActivity extends AppCompatActivity {
         mSpenSurfaceView.setPenChangeListener(mPenChangeListener);
         mSpenSurfaceView.setOnTouchListener(mTouchSurfaceViewListener);
         mSpenPageDoc.setHistoryListener(mHistoryListener);
+        mSpenPageDoc.setObjectListener(mSpenObjectEventListener);
         mEraserSettingView.setEraserListener(mEraserListener);
 
         // set stroke action
         mSpenSurfaceView.setToolTypeAction(SpenSettingViewInterface.TOOL_SPEN,
                 SpenSurfaceView.ACTION_STROKE);
+        mSpenSurfaceView.setToolTypeAction(SpenSettingViewInterface.TOOL_FINGER,
+                SpenSurfaceView.ACTION_GESTURE);
+
+        // disable zoom action
+        mSpenSurfaceView.setZoomable(true);
     }
 
     private void initializeOtherViews() {
-        App.L.d("initializeOtherViews()");
+        App.L.d("");
         // bind views and listeners
-        mPenBtn = (ImageView) findViewById(R.id.pen_btn);
+        mPenBtn = (ImageButton) findViewById(R.id.pen_btn);
         mPenBtn.setOnClickListener(mPenBtnClickListener);
 
         mShowPresetBtn = (ImageButton) findViewById(R.id.show_preset_btn);
         mShowPresetBtn.setOnClickListener(mShowPresetListener);
+
+        mNextStepBtn = (ImageButton) findViewById(R.id.next_step_btn);
+        mNextStepBtn.setOnClickListener(mNextStepBtnClickListener);
+        mNextStepBtn.setAlpha(0.3f);
+        mNextStepBtn.setEnabled(false);
 
         mAddPresetBtn = (ImageButton) findViewById(R.id.add_preset_btn);
         mAddPresetBtn.setOnClickListener(mAddPresetListener);
@@ -638,24 +888,143 @@ public class CreateorActivity extends AppCompatActivity {
         mEditPresetBtn.setOnClickListener(mEditPresetListener);
         setRippleBackground(mEditPresetBtn);
 
-        mEraserBtn = (ImageView) findViewById(R.id.eraser_btn);
+        mEraserBtn = (ImageButton) findViewById(R.id.eraser_btn);
         mEraserBtn.setOnClickListener(mEraserBtnClickListener);
 
-        mUndoBtn = (ImageView) findViewById(R.id.undo_btn);
+        mUndoBtn = (ImageButton) findViewById(R.id.undo_btn);
         mUndoBtn.setOnClickListener(mUndoAndRedoBtnClickListener);
         mUndoBtn.setEnabled(mSpenPageDoc.isUndoable());
 
-        mRedoBtn = (ImageView) findViewById(R.id.redo_btn);
+        mRedoBtn = (ImageButton) findViewById(R.id.redo_btn);
         mRedoBtn.setOnClickListener(mUndoAndRedoBtnClickListener);
         mRedoBtn.setEnabled(mSpenPageDoc.isRedoable());
 
+        mSaveBtn = (ImageButton) findViewById(R.id.save_btn);
+        mSaveBtn.setOnClickListener(mSaveBtnClickListener);
+
         mPresetLayout = (LinearLayout) findViewById(R.id.preset_layout);
+
+        /* [ReplayTest]
+        mStartRecordBtn = (Button) findViewById(R.id.test_start_record);
+        mStartRecordBtn.setOnClickListener(mStartRecordBtnListener);
+
+        mStopRecordBtn = (Button) findViewById(R.id.test_stop_record);
+        mStopRecordBtn.setOnClickListener(mStopRecordBtnListener);
+
+        mStartReplayBtn = (Button) findViewById(R.id.test_start_replay);
+        mStartReplayBtn.setOnClickListener(mStartReplayBtnListener);
+
+        mStopReplayBtn = (Button) findViewById(R.id.test_stop_replay);
+        mStopReplayBtn.setOnClickListener(mStopReplayBtnListener);
+        */
 
         selectButton(mPenBtn);
     }
 
+    private void createDialogs() {
+        App.L.d("");
+        mDeleteAllDlg = new AlertDialog.Builder(CreatorActivity.this,
+                R.style.DialogTheme)
+                .setTitle(R.string.dlg_delete_all)
+                .setMessage(R.string.dlg_delete_all_description)
+                .setPositiveButton(R.string.dlg_yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dlg, int which) {
+                        mSpenPageDoc.removeAllObject();
+                        mSpenSurfaceView.update();
+                        mSpenPageDoc.clearHistory();
+                        mStrokeList.clear();
+                        mStepModelList.clear();
+                        mNextStepBtn.setAlpha(0.3f);
+                        mNextStepBtn.setEnabled(false);
+                    }
+                })
+                .setNegativeButton(R.string.dlg_no, null)
+                .create();
+
+        mNextStepDlg = new AlertDialog.Builder(CreatorActivity.this,
+                R.style.DialogTheme)
+                .setTitle(R.string.dlg_next_step)
+                .setMessage(R.string.dlg_next_step_description)
+                .setPositiveButton(R.string.dlg_yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dlg, final int which) {
+                        addStrokeModelToStepModel();
+                    }
+                })
+                .setNegativeButton(R.string.dlg_no, null)
+                .create();
+
+        mUploadConfirmDlg = new AlertDialog.Builder(CreatorActivity.this,
+                R.style.DialogTheme)
+                .setTitle(R.string.cd_save)
+                .setMessage(R.string.dlg_save_and_upload_description)
+                .setPositiveButton(R.string.dlg_yes, new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(final DialogInterface dlg, final int which) {
+                        // TODO: 오래 걸리니깐 워커 쓰레드에서 수행하도록 변경 필요. 아직은 테스트 중
+
+                        // 중간저장하지 않은 판서 데이터가 있다면 stepModel에 저장
+                        if (!mStrokeList.isEmpty()) {
+                            addStrokeModelToStepModel();
+                        }
+
+                        final Bitmap thumbnail = createThumbnail();
+                        if (thumbnail == null) {
+                            App.L.e("thumbnail is null");
+                            Toast.makeText(CreatorActivity.this, R.string.cant_upload_file,
+                                    Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
+                        final ByteBuffer byteBuffer = ByteBuffer.allocate(thumbnail.getByteCount());
+                        thumbnail.copyPixelsToBuffer(byteBuffer);
+
+                        if (byteBuffer.hasArray()) {
+                            try {
+                                // TODO: byte array로 만들어서 write
+                            } catch (BufferUnderflowException e) {
+                                App.L.e("BufferUnderflowException occurred");
+                                e.printStackTrace();
+                            }
+                        }
+
+                        final byte[] strokeData = serializeStrokeData();
+
+                        if (strokeData == null) {
+                            App.L.e("strokeData is null");
+                            Toast.makeText(CreatorActivity.this, R.string.cant_upload_file,
+                                    Toast.LENGTH_LONG).show();
+                            return;
+                        }
+
+                        App.L.d("thumbnailSize=" + thumbnail.getByteCount() + ", strokeDataSize="
+                                + strokeData.length);
+
+                        // TODO: 판서 데이터와 썸네일 서버로 전송
+
+                        if (thumbnail.isRecycled()) {
+                            thumbnail.recycle();
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.dlg_no, null)
+                .create();
+    }
+
+    private void initializeStrokeDataModels() {
+        App.L.d("");
+        mStrokeList = new ArrayList<StrokeModel>();
+        /* [ReplayTest]
+        mDupStrokeList = new ArrayList<StrokeModel>();
+        */
+        mStepModelList = new ArrayList<StepModel>();
+        mTempFileName = UUID.randomUUID().toString();
+    }
+
     private void loadFavoritePenList() {
-        App.L.d("loadFavoritePenList()");
+        App.L.d("");
         mFavoritePenList = new ArrayList<SpenSettingPenInfo>();
         final SharedPreferences favoritePenPref =
                 getSharedPreferences(getString(R.string.prefname_favorite_pen), MODE_PRIVATE);
@@ -683,7 +1052,7 @@ public class CreateorActivity extends AppCompatActivity {
     }
 
     private void initializePresetLayout() {
-        App.L.d("initializePresetLayout()");
+        App.L.d("");
 
         mPresetLayout.removeAllViews();
         LayoutInflater inflater =
@@ -740,6 +1109,7 @@ public class CreateorActivity extends AppCompatActivity {
     private void selectButton(final View view) {
         mPenBtn.setSelected(false);
         mEraserBtn.setSelected(false);
+        mSaveBtn.setSelected(false);
 
         view.setSelected(true);
 
@@ -752,6 +1122,7 @@ public class CreateorActivity extends AppCompatActivity {
         mEraserBtn.setEnabled(isEnable);
         mUndoBtn.setEnabled(isEnable && mSpenPageDoc.isUndoable());
         mRedoBtn.setEnabled(isEnable && mSpenPageDoc.isRedoable());
+        mSaveBtn.setEnabled(isEnable);
     }
 
     private void closeOtherSettingView(final View view) {
@@ -820,7 +1191,7 @@ public class CreateorActivity extends AppCompatActivity {
     }
 
     private void savePreset() {
-        App.L.d("savePreset()");
+        App.L.d("");
         final SharedPreferences favoritePenPref =
                 getSharedPreferences(getString(R.string.prefname_favorite_pen), MODE_PRIVATE);
         final SharedPreferences.Editor editor = favoritePenPref.edit();
@@ -834,5 +1205,119 @@ public class CreateorActivity extends AppCompatActivity {
             editor.putString(getString(R.string.pen).toLowerCase() + i, presetInfo);
         }
         editor.commit();
+    }
+
+    private void closePresetLayout() {
+        mPenSettingView.setVisibility(View.GONE);
+        mEraserSettingView.setVisibility(View.GONE);
+        mPresetLayout.setVisibility(View.GONE);
+        mEditPresetBtn.setVisibility(View.GONE);
+        mShowPresetBtn.setVisibility(View.VISIBLE);
+    }
+
+    private Bitmap createThumbnail() {
+        if (mSpenSurfaceView != null) {
+            final String directoryPath = new StringBuilder(getExternalCacheDir()
+                    .getAbsolutePath()).toString();
+            final String fileName = new String(mTempFileName + ".png");
+            App.L.d("directoryPath=" + directoryPath);
+
+            File dir = null;
+            FileOutputStream out = null;
+            try {
+                dir = new File(directoryPath);
+                App.L.d(dir);
+                if (!dir.exists()) {
+                    dir.mkdirs();
+                }
+
+                App.L.d(dir.getAbsolutePath() + '/' + fileName);
+                // TODO: 썸네일의 크기 변경 필요
+                final float width = getResources().getDimension(R.dimen.thumbnail_width);
+                final float height = getResources().getDimension(R.dimen.thumbnail_height);
+                App.L.d("width=" + width + ",height=" + height);
+                out = new FileOutputStream(dir.getAbsolutePath() + '/' + fileName);
+                final Bitmap scaledBitmap = Bitmap.createScaledBitmap(
+                        mSpenSurfaceView.capturePage(1.0f), (int)width, (int)height, true);
+                scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                return scaledBitmap;
+            } catch (FileNotFoundException e) {
+                App.L.e("FileNotFoundException occurred");
+                e.printStackTrace();
+            } catch (IOException e) {
+                App.L.e("IOException occurred");
+                e.printStackTrace();
+            } finally {
+                try {
+                    out.close();
+                } catch (Exception e) {
+                    App.L.e("Exception occurred");
+                    e.printStackTrace();
+                }
+            }
+        }
+        return null;
+    }
+
+    private byte[] serializeStrokeData() {
+        if (mStepModelList == null) {
+            App.L.warning("mStepModelList is null");
+            return null;
+        }
+
+        ObjectOutputStream oos = null;
+        ByteArrayOutputStream baos = null;
+        try {
+            baos = new ByteArrayOutputStream();
+            oos = new ObjectOutputStream(baos);
+
+            oos.writeObject(mStepModelList);
+            App.L.d("baos.toByteArray().length=" + baos.toByteArray().length);
+            return baos.toByteArray();
+
+        } catch (FileNotFoundException e) {
+            App.L.e("FileNotFoundException occurred");
+            e.printStackTrace();
+        } catch (IOException e) {
+            App.L.e("IOException occurred");
+            e.printStackTrace();
+        } finally {
+            try {
+                oos.close();
+                baos.close();
+            } catch (IOException e) {
+                App.L.e("IOException occurred");
+                e.printStackTrace();
+            }
+        }
+
+        return null;
+    }
+
+    private boolean isStrokeDataExist() {
+        if (mStrokeList == null || mStepModelList == null) {
+            return false;
+        }
+
+        return !mStrokeList.isEmpty() || !mStepModelList.isEmpty();
+    }
+
+    private void addStrokeModelToStepModel() {
+        // 현재까지의 단계를 저장
+        final StepModel step = new StepModel();
+        step.setStrokes(new ArrayList<StrokeModel>());
+        step.getStrokes().addAll(mStrokeList);
+        mStrokeList.clear();
+        mStepModelList.add(step);
+        App.L.d("step.getStrokes().size()=" + step.getStrokes().size()
+                + ", mStepModelList.size()=" + mStepModelList.size());
+
+        // 이전 step으로 undo가 되지 못하도록 설정하고 undo / redo 버튼의 상태를 갱신
+        mSpenPageDoc.clearHistory();
+
+        mUndoBtn.setEnabled(mSpenPageDoc.isUndoable());
+        mRedoBtn.setEnabled(mSpenPageDoc.isRedoable());
+        mNextStepBtn.setAlpha(0.3f);
+        mNextStepBtn.setEnabled(false);
     }
 }

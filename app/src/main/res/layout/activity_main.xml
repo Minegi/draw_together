@@ -1,19 +1,101 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context=".ui.MainActivity">
+    tools:context=".ui.MainActivity"
+    android:gravity="center_vertical">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:orientation="horizontal"
+    android:layout_weight="1"
+    android:paddingTop="30dp"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp">
+
+    <ImageView
+        android:id="@+id/creator_img"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:src="@drawable/drawing" />
+
+    <ImageView
+        android:id="@+id/imitator_img"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:src="@drawable/drawing" />
+</LinearLayout>
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:orientation="horizontal"
+    android:layout_weight="1"
+    android:paddingBottom="30dp"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp">
+
+    <ImageView
+        android:id="@+id/send_img"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:padding="20dp"
+        android:src="@drawable/send" />
+
+    <ImageView
+        android:id="@+id/market_img"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:padding="20dp"
+        android:src="@drawable/market2" />
+</LinearLayout>
+
+<!--
+<Button
+    android:id="@+id/btn_move_to_creator_activity"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="@string/move_to_creator_activity"
+    android:onClick="onMoveToCreatorActivity"
+    />
+    -->
+
+<!--
+<Button
+    android:id="@+id/BtnOption"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:text="Option" />
+
+<LinearLayout
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
 
     <Button
-        android:id="@+id/btn_move_to_creator_activity"
-        android:layout_width="match_parent"
+        android:id="@+id/BtnSingUp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/move_to_creator_activity"
-        android:onClick="onMoveToCreatorActivity"
-        />
-</RelativeLayout>
+        android:layout_weight="1"
+        android:text="Sign Up" />
+
+    <Button
+        android:id="@+id/BtnLogIn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Log In" />
+</LinearLayout> -->
+</LinearLayout>
+
