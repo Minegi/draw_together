@@ -25,8 +25,13 @@
             android:name=".ui.CreatorActivity"
             android:configChanges="locale|keyboardHidden|orientation|screenSize"
             android:theme="@style/AppTheme.NoActionBar"
-            android:windowSoftInputMode="adjustResize"></activity>
-        <activity android:name=".ui.ArtworkChoiceActivity"></activity>
+            android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".ui.ArtworkChoiceActivity" />
+        <activity
+            android:name=".ui.ImitatorActivity"
+            android:configChanges="locale|keyboardHidden|orientation|screenSize"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>

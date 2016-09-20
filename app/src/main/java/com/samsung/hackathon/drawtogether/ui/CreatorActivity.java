@@ -1004,6 +1004,26 @@ public class CreatorActivity extends AppCompatActivity {
 
                         // TODO: 판서 데이터와 썸네일 서버로 전송
 
+                        // 일단 로컬에 저장
+                        final String directoryPath = new StringBuilder(getExternalCacheDir()
+                                .getAbsolutePath()).toString();
+                        final String fileName = "stroke_data.dat";
+                        FileOutputStream fos = null;
+                        try {
+                            fos = new FileOutputStream(directoryPath + '/' + fileName);
+                            fos.write(strokeData);
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } finally {
+                            try {
+                                fos.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
                         if (thumbnail.isRecycled()) {
                             thumbnail.recycle();
                         }

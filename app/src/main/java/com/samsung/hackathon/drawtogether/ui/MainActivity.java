@@ -34,7 +34,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onClick(final View view) {
-            final Intent intent = new Intent(mContext, ArtworkChoiceActivity.class);
+            final Intent intent = new Intent(mContext, ImitatorActivity.class);
+//            final Intent intent = new Intent(mContext, ArtworkChoiceActivity.class);
             startActivity(intent);
         }
     };

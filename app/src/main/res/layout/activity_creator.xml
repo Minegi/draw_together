@@ -158,7 +158,7 @@
             android:background="@drawable/circle_btn"
             android:scaleType="fitXY"
             android:src="@drawable/circle_btn_next_step"
-            android:contentDescription="@string/save_and_make_next_step"
+            android:contentDescription="@string/cd_save_and_make_next_step"
             />
 
         <LinearLayout
