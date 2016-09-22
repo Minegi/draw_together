@@ -1,17 +1,14 @@
 package com.samsung.hackathon.drawtogether.ui;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.drawable.Drawable;
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import com.samsung.hackathon.drawtogether.App;
@@ -34,8 +31,9 @@ public class ArtworkChoiceActivity extends AppCompatActivity {
     private ArtworkAdapter mArtworkAdapter;
     private Context mContext;
 
-    private ArtworkItem mSelectedItem;
+    private String mStrokeDataPath;
 
+    private ArtworkItem mSelectedItem;
     private AlertDialog mDownloadConfirmDlg;
 
     // listeners
@@ -56,6 +54,10 @@ public class ArtworkChoiceActivity extends AppCompatActivity {
                 public void onResponse(Response<ResponseBody> response) {
                     App.L.d("download completed");
                     Toast.makeText(mContext, R.string.download_completed, Toast.LENGTH_LONG).show();
+                    final Intent intent = new Intent(mContext, ImitatorActivity.class);
+                    intent.putExtra(getString(R.string.stroke_data_path), mStrokeDataPath);
+                    startActivity(intent);
+                    finish();
                 }
 
                 @Override
@@ -71,9 +73,10 @@ public class ArtworkChoiceActivity extends AppCompatActivity {
                 public void onClick(final DialogInterface dialogInterface, final int which) {
                     if (mSelectedItem != null) {
                         final String dir = mContext.getExternalCacheDir() + File.separator;
-                        App.L.d(dir);
-                        ServerInterface.getInstance().downloadFile(mSelectedItem.name + ".png",
+                        ServerInterface.getInstance().downloadFile(mSelectedItem.name + ".dat",
                                 dir, mDownloadEventListener);
+                        mStrokeDataPath = dir + mSelectedItem.name + ".dat";
+                        App.L.d(mStrokeDataPath);
                         mSelectedItem = null;
                     }
                 }

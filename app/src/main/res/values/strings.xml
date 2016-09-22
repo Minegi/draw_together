@@ -72,7 +72,7 @@
     <string name="cant_get_artwork_list">서버에서 작품 리스트들을 가져올 수 없습니다.</string>
     <string name="download_completed">다운로드가 완료되었습니다.</string>
     <string name="cant_download_file">파일을 다운로드할 수 없습니다.</string>
-
+    <string name="stroke_data_path">stroke_path</string>
 
 
 </resources>

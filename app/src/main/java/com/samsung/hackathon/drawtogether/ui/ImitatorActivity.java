@@ -2,6 +2,7 @@ package com.samsung.hackathon.drawtogether.ui;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.BitmapFactory;
@@ -65,7 +66,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import butterknife.ButterKnife;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 
@@ -190,6 +190,13 @@ public class ImitatorActivity extends AppCompatActivity {
 
             mSpenPageDoc.startRecord();
             App.L.d("startRecord");
+
+            if (mReplayableStrokeList == null) {
+                if (mSpenPageDoc.isRecording()) {
+                    mSpenPageDoc.stopRecord();
+                }
+                return;
+            }
 
             for (StrokeModel model : mReplayableStrokeList) {
                 mSpenPageDoc.appendObject(StrokeModelConvertUtils.convertToSpenObjectStroke(model));
@@ -691,8 +698,6 @@ public class ImitatorActivity extends AppCompatActivity {
         mSpenViewContainer = (FrameLayout) findViewById(R.id.spen_view_container);
         mSpenViewLayout = (RelativeLayout) findViewById(R.id.spen_view_layout);
 
-        ButterKnife.bind(this);
-
         initializeSpenSdk();
         createSpenSettingView();
         createSpenSurfaceView();
@@ -710,46 +715,7 @@ public class ImitatorActivity extends AppCompatActivity {
         initializePresetLayout();
         setPresetViewMode(PRESET_MODE_VIEW);
 
-        mCurrentStep = 0;
-
-        // for Test
-        FileInputStream fis = null;
-        ObjectInputStream ois = null;
-
-        final String directoryPath = new StringBuilder(getExternalCacheDir()
-                .getAbsolutePath()).toString();
-        final String fileName = "stroke_data.dat";
-
-        try {
-            fis = new FileInputStream(directoryPath + File.pathSeparator + fileName);
-            ois = new ObjectInputStream(fis);
-            if (mStepModelList != null) {
-                mStepModelList = (ArrayList<StepModel>)ois.readObject();
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (StreamCorruptedException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (ois != null) {
-                    ois.close();
-                }
-                if (fis != null) {
-                    fis.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        App.L.d("mStepModelList.size()=" + mStepModelList.size());
-
-        mReplayableStrokeList = mStepModelList.get(mCurrentStep).getStrokes();
+        loadStrokeData();
     }
 
     @Override
@@ -1290,5 +1256,51 @@ public class ImitatorActivity extends AppCompatActivity {
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(color);
         }
+    }
+
+    private void loadStrokeData() {
+        final Bundle bundle = getIntent().getExtras();
+        if (bundle == null) {
+            return;
+        }
+
+        final String strokeDataPath = bundle.getString(getString(R.string.stroke_data_path));
+        App.L.d("strokeDataPath=" + strokeDataPath);
+
+        mCurrentStep = 0;
+
+        FileInputStream fis = null;
+        ObjectInputStream ois = null;
+
+        try {
+            fis = new FileInputStream(strokeDataPath);
+            ois = new ObjectInputStream(fis);
+            if (mStepModelList != null) {
+                mStepModelList = (ArrayList<StepModel>)ois.readObject();
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (StreamCorruptedException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (ois != null) {
+                    ois.close();
+                }
+                if (fis != null) {
+                    fis.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        App.L.d("mStepModelList.size()=" + mStepModelList.size());
+
+        mReplayableStrokeList = mStepModelList.get(mCurrentStep).getStrokes();
     }
 }

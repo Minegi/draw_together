@@ -1,5 +1,6 @@
 package com.samsung.hackathon.drawtogether.ui;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -37,8 +38,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onClick(final View view) {
-            final Intent intent = new Intent(mContext, ImitatorActivity.class);
-//            final Intent intent = new Intent(mContext, ArtworkChoiceActivity.class);
+            final Intent intent = new Intent(mContext, ArtworkChoiceActivity.class);
             startActivity(intent);
         }
     };

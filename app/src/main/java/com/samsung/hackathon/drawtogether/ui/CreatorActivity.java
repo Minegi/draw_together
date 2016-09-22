@@ -615,8 +615,6 @@ public class CreatorActivity extends AppCompatActivity {
         mSpenViewContainer = (FrameLayout) findViewById(R.id.spen_view_container);
         mSpenViewLayout = (RelativeLayout) findViewById(R.id.spen_view_layout);
 
-        ButterKnife.bind(this);
-
         initializeSpenSdk();
         createSpenSettingView();
         createSpenSurfaceView();
