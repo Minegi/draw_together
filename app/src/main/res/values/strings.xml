@@ -15,6 +15,7 @@
     <string name="is_already_exist_same_pen">Already exists.</string>
     <string name="cant_upload_file">업로드에 실패했습니다.</string>
     <string name="upload_complete">업로드를 완료하였습니다.</string>
+    <string name="input_title">제목을 입력해주세요.</string>
 
     <string name="edit">편집</string>
     <string name="done">완료</string>
@@ -44,7 +45,9 @@
     <string name="cd_show_preset">프리셋 보기</string>
     <string name="cd_edit_preset">프리셋 편집</string>
     <string name="cd_add_preset">프리셋 추가</string>
-    <string name="save_and_make_next_step">저장 후 다음 단계 생성</string>
+    <string name="cd_replay">리플레이</string>
+    <string name="cd_save_and_make_next_step">저장 후 다음 단계 생성</string>
+    <string name="cd_load_next_step">다음 단계 불러오기</string>
 
     <!-- Dialog -->
     <string name="dlg_delete_all">모두 삭제</string>
@@ -55,6 +58,21 @@
     <string name="dlg_next_step_description">현재까지의 내용을 저장하고 다음 단계를 작성하시겠습니까? 다음 단계로 넘어가면 이전 단계로 돌아갈 수 없습니다.</string>
     <string name="dlg_save_and_upload_description">현재까지의 내용을 저장하고 마켓에 업로드하시겠습니까?</string>
     <string name="draw_data_isnt_exist">업로드할 작업물이 없습니다.</string>
+    <string name="dlg_end">종료</string>
+    <string name="dlg_confirm_close_app">정말로 DrawTogether를 종료하시겠습니까?</string>
+    <string name="dlg_confirm_move_back">정말로 뒤로 이동하시겠습니까?</string>
+    <string name="dlg_download">내려받기</string>
+    <string name="dlg_confirm_download">이 작품을 내려받으시겠습니까?</string>
+
+    <!-- used in ImitatorActivity -->
+    <string name="cant_move_next_step">다음 단계로 넘어갈 수 없습니다.</string>
+    <string name="notify_final_step">마지막 단계입니다.</string>
+
+    <!-- used in ArtworkChoiceActivity -->
+    <string name="cant_get_artwork_list">서버에서 작품 리스트들을 가져올 수 없습니다.</string>
+    <string name="download_completed">다운로드가 완료되었습니다.</string>
+    <string name="cant_download_file">파일을 다운로드할 수 없습니다.</string>
+    <string name="stroke_data_path">stroke_path</string>
 
 
 </resources>

@@ -5,7 +5,7 @@ import android.net.Uri;
 import android.os.Handler;
 
 import com.samsung.hackathon.drawtogether.App;
-import com.samsung.hackathon.drawtogether.model.FileItem;
+import com.samsung.hackathon.drawtogether.ui.model.ArtworkItem;
 import com.samsung.hackathon.drawtogether.util.FileHelper;
 
 import java.io.File;
@@ -52,32 +52,34 @@ public class ServerInterface {
         mServerAPI = mRetrofit.create(ServerAPI.class);
     }
 
-    public void getFileList(final ServerApiEventListener<List<FileItem>> mServerApiEventListener) {
-        Call<List<FileItem>> list =  mServerAPI.getFileList();
-        list.enqueue(new Callback<List<FileItem>>() {
+    public void getArtworkList(final ServerApiEventListener<List<ArtworkItem>> mServerApiEventListener) {
+        Call<List<ArtworkItem>> list =  mServerAPI.getFileList();
+        list.enqueue(new Callback<List<ArtworkItem>>() {
             @Override
-            public void onResponse(Call<List<FileItem>> call, Response<List<FileItem>> response) {
+            public void onResponse(Call<List<ArtworkItem>> call, Response<List<ArtworkItem>> response) {
                 mServerApiEventListener.onResponse(response);
             }
 
             @Override
-            public void onFailure(Call<List<FileItem>> call, Throwable t) {
+            public void onFailure(Call<List<ArtworkItem>> call, Throwable t) {
                 mServerApiEventListener.onFailure(t);
             }
         });
     }
 
-    public void uploadFile(Context context, Uri fileUri, final ServerApiEventListener<ResponseBody> mServerApiEventListener) {
+    public void uploadFile(Context context, final String fileName, Uri fileUri,
+                           final ServerApiEventListener<ResponseBody> mServerApiEventListener) {
         File file = new File(FileHelper.getInstance().getRealPathFromUri(context, fileUri));
-        uploadFile(file, mServerApiEventListener);
+        uploadFile(fileName, file, mServerApiEventListener);
     }
 
-    public void uploadFile(File file, final ServerApiEventListener<ResponseBody> mServerApiEventListener) {
+    public void uploadFile(final String fileName, File file,
+                           final ServerApiEventListener<ResponseBody> mServerApiEventListener) {
 
         RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), file);
         MultipartBody.Part body = MultipartBody.Part.createFormData("uploadFile", file.getName(), requestFile);
 
-        Call<ResponseBody> call = mServerAPI.uploadFile(file.getName(), body);
+        Call<ResponseBody> call = mServerAPI.uploadFile(fileName, body);
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -87,6 +89,58 @@ public class ServerInterface {
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 mServerApiEventListener.onFailure(t);
+            }
+        });
+    }
+
+    private void uploadFile(final String fileName, File file1, File file2,
+                            final ServerApiEventListener<ResponseBody> mServerApiEventListener) {
+        RequestBody requestFile1 = RequestBody.create(MediaType.parse("multipart/form-data"), file1);
+        MultipartBody.Part body1 = MultipartBody.Part.createFormData("uploadFile1", file1.getName(), requestFile1);
+
+        RequestBody requestFile2 = RequestBody.create(MediaType.parse("multipart/form-data"), file2);
+        MultipartBody.Part body2 = MultipartBody.Part.createFormData("uploadFile2", file2.getName(), requestFile2);
+
+        Call<ResponseBody> call = mServerAPI.uploadFile(fileName, body1, body2);
+        call.enqueue(new Callback<ResponseBody>() {
+
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                mServerApiEventListener.onResponse(response);
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                mServerApiEventListener.onFailure(t);
+            }
+        });
+
+    }
+
+    public void uploadFile(final File thumbnailFile, final String thumbnailFileName,
+                           final byte[] strokeData, final String strokeDataFileName,
+                           final String fileName,
+                           final ServerApiEventListener<ResponseBody> fileUploadEventListener) {
+        final RequestBody requestFile1 =
+                RequestBody.create(MediaType.parse("multipart/form-data"), thumbnailFile);
+        final MultipartBody.Part body1 =
+                MultipartBody.Part.createFormData("uploadFile1", thumbnailFileName, requestFile1);
+        final RequestBody requestFile2 =
+                RequestBody.create(MediaType.parse("multipart/form-data"), strokeData);
+        final MultipartBody.Part body2 =
+                MultipartBody.Part.createFormData("uploadFile2", strokeDataFileName, requestFile2);
+
+        Call<ResponseBody> call = mServerAPI.uploadFile(fileName, body1, body2);
+        call.enqueue(new Callback<ResponseBody>() {
+
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                fileUploadEventListener.onResponse(response);
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                fileUploadEventListener.onFailure(t);
             }
         });
     }
@@ -101,7 +155,7 @@ public class ServerInterface {
             @Override
             public void onResponse(Call<ResponseBody> call, final Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
-                    App.L.d("server contacted and has file");
+                    App.L.d("server contacted and has strokeData");
                     String header = response.headers().get("Content-Disposition");
                     String fileName = header.replace("attachment; filename=", "").replace("\"", "");
                     final String filePath = fileDir + File.separator + fileName;
