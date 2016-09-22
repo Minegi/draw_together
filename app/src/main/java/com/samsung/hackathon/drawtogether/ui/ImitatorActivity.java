@@ -88,7 +88,6 @@ public class ImitatorActivity extends AppCompatActivity {
 
     private ArrayList<StrokeModel> mStrokeList;
     private ArrayList<StrokeModel> mReplayableStrokeList;
-    private ArrayList<StrokeModel> mBackupStrokeList;
 
     private ArrayList<StepModel> mStepModelList;
     private String mTempFileName;
@@ -356,13 +355,7 @@ public class ImitatorActivity extends AppCompatActivity {
                         App.L.d(strokeModel.toString());
                         mStrokeList.add(strokeModel);
 
-                        if (!mStrokeList.isEmpty()) {
-                            mNextStepBtn.setAlpha(1.0f);
-                            mNextStepBtn.setEnabled(true);
-                        } else {
-                            mNextStepBtn.setAlpha(0.3f);
-                            mNextStepBtn.setEnabled(false);
-                        }
+                        enableNextStepAndReplayBtn(true);
 
                         App.L.d("[ObjectAdded] added!");
                     }
@@ -382,12 +375,8 @@ public class ImitatorActivity extends AppCompatActivity {
 
                     if (!mStrokeList.isEmpty()) {
                         mStrokeList.remove(mStrokeList.size() - 1);
-                        mNextStepBtn.setAlpha(1.0f);
-                        mNextStepBtn.setEnabled(true);
-                    } else {
-                        mNextStepBtn.setAlpha(0.3f);
-                        mNextStepBtn.setEnabled(false);
                     }
+                    enableNextStepAndReplayBtn(true);
                     App.L.d("[ObjectRemoved] removed!");
                 }
 
@@ -585,7 +574,6 @@ public class ImitatorActivity extends AppCompatActivity {
 
         @Override
         public void onCompleted() {
-
             final int sizeOfReplayData = mReplayableStrokeList.size();
 
             App.L.d("mReplayableStrokeList.size()=" + sizeOfReplayData);
@@ -747,7 +735,7 @@ public class ImitatorActivity extends AppCompatActivity {
 
         App.L.d("mStepModelList.size()=" + mStepModelList.size());
 
-        mReplayableStrokeList = mStepModelList.get(0).getStrokes();
+        mReplayableStrokeList = mStepModelList.get(mCurrentStep).getStrokes();
     }
 
     @Override
@@ -978,9 +966,11 @@ public class ImitatorActivity extends AppCompatActivity {
                         mSpenSurfaceView.update();
                         mSpenPageDoc.clearHistory();
                         mStrokeList.clear();
-                        mStepModelList.clear();
                         mNextStepBtn.setAlpha(0.3f);
                         mNextStepBtn.setEnabled(false);
+                        mCurrentStep = 0;
+                        mReplayableStrokeList = mStepModelList.get(mCurrentStep).getStrokes();
+
                     }
                 })
                 .setNegativeButton(R.string.dlg_no, null)
@@ -993,7 +983,7 @@ public class ImitatorActivity extends AppCompatActivity {
                 .setPositiveButton(R.string.dlg_yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(final DialogInterface dlg, final int which) {
-                        addStrokeModelToStepModel();
+                        moveToNextStep();
                     }
                 })
                 .setNegativeButton(R.string.dlg_no, null)
@@ -1007,72 +997,7 @@ public class ImitatorActivity extends AppCompatActivity {
 
                     @Override
                     public void onClick(final DialogInterface dlg, final int which) {
-                        // TODO: 오래 걸리니깐 워커 쓰레드에서 수행하도록 변경 필요. 아직은 테스트 중
-
-                        // 중간저장하지 않은 판서 데이터가 있다면 stepModel에 저장
-                        if (!mStrokeList.isEmpty()) {
-                            addStrokeModelToStepModel();
-                        }
-
-                        final Bitmap thumbnail = createThumbnail();
-                        if (thumbnail == null) {
-                            App.L.e("thumbnail is null");
-                            Toast.makeText(ImitatorActivity.this, R.string.cant_upload_file,
-                                    Toast.LENGTH_LONG).show();
-                            return;
-                        }
-
-                        final ByteBuffer byteBuffer = ByteBuffer.allocate(thumbnail.getByteCount());
-                        thumbnail.copyPixelsToBuffer(byteBuffer);
-
-                        if (byteBuffer.hasArray()) {
-                            try {
-                                // TODO: byte array로 만들어서 write
-                            } catch (BufferUnderflowException e) {
-                                App.L.e("BufferUnderflowException occurred");
-                                e.printStackTrace();
-                            }
-                        }
-
-                        final byte[] strokeData = serializeStrokeData();
-
-                        if (strokeData == null) {
-                            App.L.e("strokeData is null");
-                            Toast.makeText(ImitatorActivity.this, R.string.cant_upload_file,
-                                    Toast.LENGTH_LONG).show();
-                            return;
-                        }
-
-                        App.L.d("thumbnailSize=" + thumbnail.getByteCount() + ", strokeDataSize="
-                                + strokeData.length);
-
-                        // TODO: 판서 데이터와 썸네일 서버로 전송
-
-                        // 일단 로컬에 저장
-                        final String directoryPath = new StringBuilder(getExternalCacheDir()
-                                .getAbsolutePath()).toString();
-                        final String fileName = "stroke_data.dat";
-                        FileOutputStream fos = null;
-                        try {
-                            fos = new FileOutputStream(directoryPath + '/' + fileName);
-                            fos.write(strokeData);
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } finally {
-                            try {
-                                if (fos != null) {
-                                    fos.close();
-                                }
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                        if (thumbnail.isRecycled()) {
-                            thumbnail.recycle();
-                        }
+                        // TODO: 그림 파일로 저장
                     }
                 })
                 .setNegativeButton(R.string.dlg_no, null)
@@ -1082,7 +1007,6 @@ public class ImitatorActivity extends AppCompatActivity {
     private void initializeStrokeDataModels() {
         App.L.d("");
         mStrokeList = new ArrayList<StrokeModel>();
-        mBackupStrokeList = new ArrayList<StrokeModel>();
         mStepModelList = new ArrayList<StepModel>();
 
         mTempFileName = UUID.randomUUID().toString();
@@ -1187,7 +1111,7 @@ public class ImitatorActivity extends AppCompatActivity {
         mEraserBtn.setEnabled(isEnable);
         mUndoBtn.setEnabled(isEnable && mSpenPageDoc.isUndoable());
         mRedoBtn.setEnabled(isEnable && mSpenPageDoc.isRedoable());
-        mReplayBtn.setEnabled(isEnable);
+        enableNextStepAndReplayBtn(isEnable);
         mSaveBtn.setEnabled(isEnable);
     }
 
@@ -1374,22 +1298,42 @@ public class ImitatorActivity extends AppCompatActivity {
         return !mStrokeList.isEmpty() || !mStepModelList.isEmpty();
     }
 
-    private void addStrokeModelToStepModel() {
-        // 현재까지의 단계를 저장
-        final StepModel step = new StepModel();
-        step.setStrokes(new ArrayList<StrokeModel>());
-        step.getStrokes().addAll(mStrokeList);
+    private void moveToNextStep() {
+        if (mStepModelList == null || mStrokeList == null) {
+            Toast.makeText(mContext, R.string.cant_move_next_step, Toast.LENGTH_LONG).show();
+            return;
+        }
+        App.L.d("mStepModelList.size()=" + mStepModelList.size()
+                + ", mCurrentStep=" + mCurrentStep);
+
+        // 다음 스텝이 없는 경우에는 Toast 띄워줌
+        if (mStepModelList.size() - 1 <= mCurrentStep) {
+            Toast.makeText(mContext, R.string.notify_final_step, Toast.LENGTH_LONG).show();
+            return;
+        }
+
         mStrokeList.clear();
-        mStepModelList.add(step);
-        App.L.d("step.getStrokes().size()=" + step.getStrokes().size()
-                + ", mStepModelList.size()=" + mStepModelList.size());
+        mReplayableStrokeList = mStepModelList.get(++mCurrentStep).getStrokes();
 
         // 이전 step으로 undo가 되지 못하도록 설정하고 undo / redo 버튼의 상태를 갱신
         mSpenPageDoc.clearHistory();
-
         mUndoBtn.setEnabled(mSpenPageDoc.isUndoable());
         mRedoBtn.setEnabled(mSpenPageDoc.isRedoable());
-        mNextStepBtn.setAlpha(0.3f);
-        mNextStepBtn.setEnabled(false);
+        enableNextStepAndReplayBtn(true);
+    }
+
+    private void enableNextStepAndReplayBtn(final boolean isEnable) {
+        final boolean isStrokeListEmpty = mStrokeList.isEmpty();
+        mReplayBtn.setEnabled(isEnable && isStrokeListEmpty);
+        App.L.d("mStepModelList.size()=" + mStepModelList.size()
+                + ", mCurrentStep=" + mCurrentStep + ", mStrokeList.size()=" + mStrokeList.size());
+
+        if (isEnable && (!isStrokeListEmpty && mStepModelList.size() - 1 > mCurrentStep)) {
+            mNextStepBtn.setAlpha(1.0f);
+            mNextStepBtn.setEnabled(isEnable && true);
+        } else {
+            mNextStepBtn.setAlpha(0.3f);
+            mNextStepBtn.setEnabled(isEnable && false);
+        }
     }
 }

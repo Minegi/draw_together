@@ -187,4 +187,18 @@ public class FileHelper {
             return false;
         }
     }
+
+    public void clearCacheFiles(final Context context) {
+        final String directoryPath = context.getExternalCacheDir().toString();
+        File cacheDir = new File(directoryPath);
+
+        File[] cacheFiles = cacheDir.listFiles();
+        if (cacheFiles == null) {
+            return;
+        }
+
+        for (File cacheFile : cacheFiles) {
+            cacheFile.delete();
+        }
+    }
 }
