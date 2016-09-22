@@ -1,11 +1,10 @@
 package com.samsung.hackathon.drawtogether.communication;
 
-import com.samsung.hackathon.drawtogether.model.FileItem;
+import com.samsung.hackathon.drawtogether.ui.model.ArtworkItem;
 
 import java.util.List;
 
 import okhttp3.MultipartBody;
-import okhttp3.Response;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -21,11 +20,11 @@ import retrofit2.http.Streaming;
 public interface ServerAPI {
 
     @GET("filelist")
-    Call<List<FileItem>> getFileList();
+    Call<List<ArtworkItem>> getFileList();
 
 //    @Multipart
 //    @POST("upload/{filename}")
-//    Call<ResponseBody> uploadFile(@Path("filename") String filename, @Part MultipartBody.Part file);
+//    Call<ResponseBody> uploadFile(@Path("filename") String filename, @Part MultipartBody.Part strokeData);
 
     @Multipart
     @POST("upload")

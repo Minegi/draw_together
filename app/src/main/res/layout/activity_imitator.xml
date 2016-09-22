@@ -5,10 +5,10 @@ xmlns:tools="http://schemas.android.com/tools"
 android:orientation="vertical"
 android:layout_width="match_parent"
 android:layout_height="match_parent"
-android:paddingBottom="@dimen/activity_vertical_margin"
-android:paddingLeft="@dimen/activity_horizontal_margin"
-android:paddingRight="@dimen/activity_horizontal_margin"
-android:paddingTop="@dimen/activity_vertical_margin"
+android:paddingBottom="@dimen/activity_vertical_no_margin"
+android:paddingLeft="@dimen/activity_horizontal_no_margin"
+android:paddingRight="@dimen/activity_horizontal_no_margin"
+android:paddingTop="@dimen/activity_vertical_no_margin"
 tools:context=".ui.ImitatorActivity">
 
 <LinearLayout
@@ -81,58 +81,7 @@ tools:context=".ui.ImitatorActivity">
         />
 
 </LinearLayout>
-<!-- for replay test -->
-<!--
-<LinearLayout
-    android:id="@+id/test_replay_layout"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    >
 
-    <Button
-        android:id="@+id/test_start_record"
-        android:layout_width="0dip"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:textSize="12dip"
-        android:background="@drawable/selector_tool_bg"
-        android:text="REC start"
-        />
-
-    <Button
-        android:id="@+id/test_stop_record"
-        android:layout_width="0dip"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:textSize="12dip"
-        android:background="@drawable/selector_tool_bg"
-        android:text="REC stop"
-        />
-
-    <Button
-        android:id="@+id/test_start_replay"
-        android:layout_width="0dip"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:textSize="12dip"
-        android:background="@drawable/selector_tool_bg"
-        android:text="Start replay"
-        />
-
-    <Button
-        android:id="@+id/test_stop_replay"
-        android:layout_width="0dip"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:textSize="12dip"
-        android:background="@drawable/selector_tool_bg"
-        android:text="Stop replay"
-        />
-
-</LinearLayout>
--->
-<!-- for replay test -->
 <FrameLayout
     android:id="@+id/spen_view_container"
     android:layout_width="match_parent"
@@ -144,6 +93,19 @@ tools:context=".ui.ImitatorActivity">
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#ffffff"
+        />
+
+    <ProgressBar
+        android:id="@+id/replay_progress_bar"
+        android:layout_width="match_parent"
+        android:layout_height="16dip"
+        android:layout_gravity="left|top"
+        android:layout_marginLeft="3dip"
+        android:layout_marginRight="3dip"
+        android:layout_marginTop="-7dip"
+        android:max="100"
+        android:visibility="gone"
+        style="@android:style/Widget.Holo.ProgressBar.Horizontal"
         />
 
     <ImageButton
@@ -211,7 +173,6 @@ tools:context=".ui.ImitatorActivity">
                 android:visibility="gone"
                 >
 
-                <!-- TODO: 아이콘 이미지 바꿔야 함 -->
                 <ImageButton
                     android:id="@+id/add_preset_btn"
                     android:layout_width="28dip"

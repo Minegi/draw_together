@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.RippleDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -18,6 +19,8 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -603,6 +606,8 @@ public class CreatorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_creator);
         mContext = getApplicationContext();
 
+        setStatusBarColor(getColor(R.color.colorPrimary));
+
         mSpenViewContainer = (FrameLayout) findViewById(R.id.spen_view_container);
         mSpenViewLayout = (RelativeLayout) findViewById(R.id.spen_view_layout);
 
@@ -625,9 +630,6 @@ public class CreatorActivity extends AppCompatActivity {
         initializePresetLayout();
         setPresetViewMode(PRESET_MODE_VIEW);
     }
-
-
-
 
     @Override
     protected void onPause() {
@@ -921,7 +923,7 @@ public class CreatorActivity extends AppCompatActivity {
                                     try {
                                         // 판서 데이터와 썸네일 서버로 전송
                                         ServerInterface.getInstance().uploadFile(
-                                                byteBuffer.array(), mTempFileName + ".png",
+                                                byteBuffer.array(), mTempFileName + ".jpg",
                                                 strokeData, mTempFileName + ".dat",
                                                 mFileUploadEventListener
                                         );
@@ -1170,7 +1172,7 @@ public class CreatorActivity extends AppCompatActivity {
         if (mSpenSurfaceView != null) {
             final String directoryPath = new StringBuilder(getExternalCacheDir()
                     .getAbsolutePath()).toString();
-            final String fileName = new String(mTempFileName + ".png");
+            final String fileName = new String(mTempFileName + ".jpg");
             App.L.d("directoryPath=" + directoryPath);
 
             File dir = null;
@@ -1190,7 +1192,7 @@ public class CreatorActivity extends AppCompatActivity {
                 out = new FileOutputStream(dir.getAbsolutePath() + '/' + fileName);
                 final Bitmap scaledBitmap = Bitmap.createScaledBitmap(
                         mSpenSurfaceView.capturePage(1.0f), (int)width, (int)height, true);
-                scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
                 return scaledBitmap;
             } catch (FileNotFoundException e) {
                 App.L.e("FileNotFoundException occurred");
@@ -1280,5 +1282,29 @@ public class CreatorActivity extends AppCompatActivity {
             mNextStepBtn.setAlpha(0.3f);
         }
         mNextStepBtn.setEnabled(isEnable);
+    }
+
+    @Override
+    public void onBackPressed() {
+        new AlertDialog.Builder(CreatorActivity.this,
+                R.style.DialogTheme)
+                .setTitle(R.string.dlg_end)
+                .setMessage(R.string.dlg_confirm_move_back)
+                .setPositiveButton(R.string.dlg_yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dlg, final int which) {
+                        finish();
+                    }
+                })
+                .setNegativeButton(R.string.dlg_no, null)
+                .create().show();
+    }
+
+    private void setStatusBarColor(final int color) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(color);
+        }
     }
 }

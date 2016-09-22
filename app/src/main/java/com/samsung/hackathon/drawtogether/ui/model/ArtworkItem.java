@@ -1,27 +1,19 @@
 package com.samsung.hackathon.drawtogether.ui.model;
 
-import android.graphics.drawable.Drawable;
-
 /**
- * Created by 김시내 on 2016-09-17.
+ * Created by Hi.JiGOO on 16. 9. 14..
  */
 public class ArtworkItem {
-    private Drawable iconDrawable;
-    private String titleStr;
+    public String name;
+    public String strokeData;
+    public String thumbnail;
 
-    public String getTitle() {
-        return titleStr;
+    public ArtworkItem(String name) {
+        this.name = name;
     }
-
-    public void setTitle(String titleStr) {
-        this.titleStr = titleStr;
-    }
-
-    public Drawable getIcon() {
-        return iconDrawable;
-    }
-
-    public void setIcon(Drawable iconDrawable) {
-        this.iconDrawable = iconDrawable;
+    public ArtworkItem(String name, String strokeData, String thumbnail) {
+        this.name = name;
+        this.strokeData = strokeData;
+        this.thumbnail = thumbnail;
     }
 }

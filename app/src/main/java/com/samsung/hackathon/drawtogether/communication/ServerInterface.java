@@ -5,7 +5,7 @@ import android.net.Uri;
 import android.os.Handler;
 
 import com.samsung.hackathon.drawtogether.App;
-import com.samsung.hackathon.drawtogether.model.FileItem;
+import com.samsung.hackathon.drawtogether.ui.model.ArtworkItem;
 import com.samsung.hackathon.drawtogether.util.FileHelper;
 
 import java.io.File;
@@ -52,16 +52,16 @@ public class ServerInterface {
         mServerAPI = mRetrofit.create(ServerAPI.class);
     }
 
-    public void getFileList(final ServerApiEventListener<List<FileItem>> mServerApiEventListener) {
-        Call<List<FileItem>> list =  mServerAPI.getFileList();
-        list.enqueue(new Callback<List<FileItem>>() {
+    public void getArtworkList(final ServerApiEventListener<List<ArtworkItem>> mServerApiEventListener) {
+        Call<List<ArtworkItem>> list =  mServerAPI.getFileList();
+        list.enqueue(new Callback<List<ArtworkItem>>() {
             @Override
-            public void onResponse(Call<List<FileItem>> call, Response<List<FileItem>> response) {
+            public void onResponse(Call<List<ArtworkItem>> call, Response<List<ArtworkItem>> response) {
                 mServerApiEventListener.onResponse(response);
             }
 
             @Override
-            public void onFailure(Call<List<FileItem>> call, Throwable t) {
+            public void onFailure(Call<List<ArtworkItem>> call, Throwable t) {
                 mServerApiEventListener.onFailure(t);
             }
         });
@@ -151,7 +151,7 @@ public class ServerInterface {
             @Override
             public void onResponse(Call<ResponseBody> call, final Response<ResponseBody> response) {
                 if (response.isSuccessful()) {
-                    App.L.d("server contacted and has file");
+                    App.L.d("server contacted and has strokeData");
                     String header = response.headers().get("Content-Disposition");
                     String fileName = header.replace("attachment; filename=", "").replace("\"", "");
                     final String filePath = fileDir + File.separator + fileName;

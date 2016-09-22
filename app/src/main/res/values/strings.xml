@@ -57,10 +57,15 @@
     <string name="dlg_next_step_description">현재까지의 내용을 저장하고 다음 단계를 작성하시겠습니까? 다음 단계로 넘어가면 이전 단계로 돌아갈 수 없습니다.</string>
     <string name="dlg_save_and_upload_description">현재까지의 내용을 저장하고 마켓에 업로드하시겠습니까?</string>
     <string name="draw_data_isnt_exist">업로드할 작업물이 없습니다.</string>
+    <string name="dlg_end">종료</string>
+    <string name="dlg_confirm_close_app">정말로 DrawTogether를 종료하시겠습니까?</string>
+    <string name="dlg_confirm_move_back">정말로 뒤로 이동하시겠습니까?</string>
 
     <!-- used in ImitatorActivity -->
     <string name="cant_move_next_step">다음 단계로 넘어갈 수 없습니다.</string>
     <string name="notify_final_step">마지막 단계입니다.</string>
 
+    <!-- used in ArtworkChoiceActivity -->
+    <string name="cant_get_artwork_list">서버에서 작품 리스트들을 가져올 수 없습니다.</string>
 
 </resources>

@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.RippleDrawable;
+import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -18,11 +19,14 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -61,8 +65,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.StreamCorruptedException;
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -124,6 +126,8 @@ public class ImitatorActivity extends AppCompatActivity {
     private AlertDialog mDeleteAllDlg;
     private AlertDialog mNextStepDlg;
 
+    private ProgressBar mReplayProgressBar;
+
     // listeners
     private final View.OnClickListener mPenBtnClickListener = new View.OnClickListener() {
         @Override
@@ -182,6 +186,9 @@ public class ImitatorActivity extends AppCompatActivity {
                 App.L.e("mSpenSurfaceView or mSpenPageDoc is null");
                 return;
             }
+
+            closeOtherSettingView(mPenSettingView);
+            closeOtherSettingView(mEraserSettingView);
 
             mSpenPageDoc.setHistoryTag();
 
@@ -570,6 +577,15 @@ public class ImitatorActivity extends AppCompatActivity {
         @Override
         public void onProgressChanged(final int progress, final int objID) {
 //            App.L.d("progress=" + progress);
+            ImitatorActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (mReplayProgressBar != null) {
+                        mReplayProgressBar.setVisibility(View.VISIBLE);
+                        mReplayProgressBar.setProgress(progress);
+                    }
+                }
+            });
         }
 
         @Override
@@ -586,9 +602,9 @@ public class ImitatorActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-
                     mSpenPageDoc.undoToTag();
                     mSpenSurfaceView.update();
+                    mReplayProgressBar.setVisibility(View.GONE);
 
                     enableButton(true);
                 }
@@ -673,6 +689,8 @@ public class ImitatorActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_imitator);
         mContext = getApplicationContext();
+
+        setStatusBarColor(getColor(R.color.colorPrimary));
 
         mSpenViewContainer = (FrameLayout) findViewById(R.id.spen_view_container);
         mSpenViewLayout = (RelativeLayout) findViewById(R.id.spen_view_layout);
@@ -949,6 +967,7 @@ public class ImitatorActivity extends AppCompatActivity {
         mSaveBtn.setOnClickListener(mSaveBtnClickListener);
 
         mPresetLayout = (LinearLayout) findViewById(R.id.preset_layout);
+        mReplayProgressBar = (ProgressBar) findViewById(R.id.replay_progress_bar);
 
         selectButton(mPenBtn);
     }
@@ -1317,6 +1336,7 @@ public class ImitatorActivity extends AppCompatActivity {
 
         // 이전 step으로 undo가 되지 못하도록 설정하고 undo / redo 버튼의 상태를 갱신
         mSpenPageDoc.clearHistory();
+        mSpenPageDoc.clearRecordedObject();
         mUndoBtn.setEnabled(mSpenPageDoc.isUndoable());
         mRedoBtn.setEnabled(mSpenPageDoc.isRedoable());
         enableNextStepAndReplayBtn(true);
@@ -1334,6 +1354,30 @@ public class ImitatorActivity extends AppCompatActivity {
         } else {
             mNextStepBtn.setAlpha(0.3f);
             mNextStepBtn.setEnabled(isEnable && false);
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        new AlertDialog.Builder(ImitatorActivity.this,
+                R.style.DialogTheme)
+                .setTitle(R.string.dlg_end)
+                .setMessage(R.string.dlg_confirm_move_back)
+                .setPositiveButton(R.string.dlg_yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dlg, final int which) {
+                        finish();
+                    }
+                })
+                .setNegativeButton(R.string.dlg_no, null)
+                .create().show();
+    }
+
+    private void setStatusBarColor(final int color) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Window window = getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(color);
         }
     }
 }

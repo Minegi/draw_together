@@ -1,11 +1,14 @@
 package com.samsung.hackathon.drawtogether.ui;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.GridView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -16,42 +19,33 @@ import com.samsung.hackathon.drawtogether.ui.model.ArtworkItem;
 /**
  * Created by 김시내 on 2016-09-17.
  */
-public class ArtworkChoiceActivity extends Activity {
+public class ArtworkChoiceActivity extends AppCompatActivity {
+
+    private GridView mGridView;
+    private ArtworkAdapter mArtworkAdapter;
+    private Context mContext;
+
+    // listeners
+    private AdapterView.OnItemClickListener mGridViewItemClickListener =
+            new AdapterView.OnItemClickListener() {
+
+                @Override
+                public void onItemClick(AdapterView<?> adapterView, View view, int pos, long id) {
+                    final ArtworkItem item = (ArtworkItem) adapterView.getItemAtPosition(pos);
+                    Toast.makeText(mContext, item.name, Toast.LENGTH_LONG).show();
+                }
+            };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_artwork_choice);
+        mContext = this;
 
-        ListView listview;
-        ArtworkAdapter adapter;
+        mArtworkAdapter = new ArtworkAdapter(this);
 
-        adapter = new ArtworkAdapter();
-
-        listview = (ListView) findViewById(R.id.listview1);
-        listview.setAdapter(adapter);
-
-        // 서버로부터 데이터 받아서 item 추가
-        adapter.addItem(ContextCompat.getDrawable(this, R.drawable.sketch1), "sketch 1");
-        adapter.addItem(ContextCompat.getDrawable(this, R.drawable.sketch2), "sketch 2");
-        adapter.addItem(ContextCompat.getDrawable(this, R.drawable.sketch3), "sketch 3");
-
-        // 위에서 생성한 listView 에 클릭 이벤트 핸들러 정의
-        listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // get item
-                ArtworkItem item = (ArtworkItem) parent.getItemAtPosition(position);
-
-                String titleStr = item.getTitle();
-                Drawable iconDrawable = item.getIcon();
-
-                Toast.makeText(parent.getContext(), "Click " + titleStr, Toast.LENGTH_SHORT).show();
-
-                //TODO : use item data.
-                // 해당 그림
-
-            }
-        });
+        mGridView = (GridView) findViewById(R.id.artwork_grid_view);
+        mGridView.setAdapter(mArtworkAdapter);
+        mGridView.setOnItemClickListener(mGridViewItemClickListener);
     }
 }

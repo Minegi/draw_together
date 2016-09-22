@@ -1,7 +1,9 @@
 package com.samsung.hackathon.drawtogether.ui;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -48,10 +50,10 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private View.OnClickListener mMarketBtnClickListener = new View.OnClickListener() {
-
         @Override
         public void onClick(final View view) {
-            Toast.makeText(mContext, "Market", Toast.LENGTH_LONG).show();
+            final Intent intent = new Intent(mContext, ArtworkChoiceActivity.class);
+            startActivity(intent);
         }
     };
 
@@ -78,5 +80,21 @@ public class MainActivity extends AppCompatActivity {
 
         mMarketBtn = (ImageView) findViewById(R.id.market_img);
         mMarketBtn.setOnClickListener(mMarketBtnClickListener);
+    }
+
+    @Override
+    public void onBackPressed() {
+        new AlertDialog.Builder(MainActivity.this,
+                R.style.DialogTheme)
+                .setTitle(R.string.dlg_end)
+                .setMessage(R.string.dlg_confirm_close_app)
+                .setPositiveButton(R.string.dlg_yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(final DialogInterface dlg, final int which) {
+                        finish();
+                    }
+                })
+                .setNegativeButton(R.string.dlg_no, null)
+                .create().show();
     }
 }

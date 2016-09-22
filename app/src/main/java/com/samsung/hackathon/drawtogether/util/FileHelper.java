@@ -101,7 +101,7 @@ public class FileHelper {
             return getDataColumn(context, uri, null, null);
         }
         // File
-        else if ("file".equalsIgnoreCase(uri.getScheme())) {
+        else if ("strokeData".equalsIgnoreCase(uri.getScheme())) {
             return uri.getPath();
         }
 
@@ -168,7 +168,7 @@ public class FileHelper {
                     outputStream.write(fileReader, 0, read);
                     fileSizeDownloaded += read;
 
-                    Log.d("ServerInterface", "file download: " + fileSizeDownloaded + " of " + fileSize);
+                    Log.d("ServerInterface", "strokeData download: " + fileSizeDownloaded + " of " + fileSize);
                 }
 
                 outputStream.flush();
