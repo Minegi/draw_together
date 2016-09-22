@@ -77,7 +77,7 @@ public class ServerInterface {
         RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), file);
         MultipartBody.Part body = MultipartBody.Part.createFormData("uploadFile", file.getName(), requestFile);
 
-        Call<ResponseBody> call = mServerAPI.uploadFile(file.getName(), body);
+        Call<ResponseBody> call = mServerAPI.uploadFile(body);
         call.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -87,6 +87,56 @@ public class ServerInterface {
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 mServerApiEventListener.onFailure(t);
+            }
+        });
+    }
+
+    private void uploadFile(File file1, File file2, final ServerApiEventListener<ResponseBody> mServerApiEventListener) {
+        RequestBody requestFile1 = RequestBody.create(MediaType.parse("multipart/form-data"), file1);
+        MultipartBody.Part body1 = MultipartBody.Part.createFormData("uploadFile1", file1.getName(), requestFile1);
+
+        RequestBody requestFile2 = RequestBody.create(MediaType.parse("multipart/form-data"), file2);
+        MultipartBody.Part body2 = MultipartBody.Part.createFormData("uploadFile2", file2.getName(), requestFile2);
+
+        Call<ResponseBody> call = mServerAPI.uploadFile(body1, body2);
+        call.enqueue(new Callback<ResponseBody>() {
+
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                mServerApiEventListener.onResponse(response);
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                mServerApiEventListener.onFailure(t);
+            }
+        });
+
+    }
+
+    public void uploadFile(final byte[] thumbnailData, final String thumbnailFileName,
+                           final byte[] strokeData, final String strokeDataFileName,
+                           final ServerApiEventListener<ResponseBody> fileUploadEventListener) {
+        final RequestBody requestFile1 =
+                RequestBody.create(MediaType.parse("multipart/form-data"), thumbnailData);
+        final MultipartBody.Part body1 =
+                MultipartBody.Part.createFormData("uploadFile1", thumbnailFileName, requestFile1);
+        final RequestBody requestFile2 =
+                RequestBody.create(MediaType.parse("multipart/form-data"), strokeData);
+        final MultipartBody.Part body2 =
+                MultipartBody.Part.createFormData("uploadFile2", strokeDataFileName, requestFile2);
+
+        Call<ResponseBody> call = mServerAPI.uploadFile(body1, body2);
+        call.enqueue(new Callback<ResponseBody>() {
+
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                fileUploadEventListener.onResponse(response);
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                fileUploadEventListener.onFailure(t);
             }
         });
     }

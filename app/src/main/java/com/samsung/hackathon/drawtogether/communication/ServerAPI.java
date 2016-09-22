@@ -5,6 +5,7 @@ import com.samsung.hackathon.drawtogether.model.FileItem;
 import java.util.List;
 
 import okhttp3.MultipartBody;
+import okhttp3.Response;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.GET;
@@ -22,9 +23,17 @@ public interface ServerAPI {
     @GET("filelist")
     Call<List<FileItem>> getFileList();
 
+//    @Multipart
+//    @POST("upload/{filename}")
+//    Call<ResponseBody> uploadFile(@Path("filename") String filename, @Part MultipartBody.Part file);
+
     @Multipart
-    @POST("upload/{filename}")
-    Call<ResponseBody> uploadFile(@Path("filename") String filename, @Part MultipartBody.Part file);
+    @POST("upload")
+    Call<ResponseBody> uploadFile(@Part MultipartBody.Part file);
+
+    @Multipart
+    @POST("upload")
+    Call<ResponseBody> uploadFile(@Part MultipartBody.Part file1, @Part MultipartBody.Part file2);
 
     @Streaming
     @GET("download/{filename}")

@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Parcelable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -45,6 +46,7 @@ import com.samsung.android.sdk.pen.settingui.SpenSettingEraserLayout;
 import com.samsung.android.sdk.pen.settingui.SpenSettingPenLayout;
 import com.samsung.hackathon.drawtogether.App;
 import com.samsung.hackathon.drawtogether.R;
+import com.samsung.hackathon.drawtogether.communication.ServerInterface;
 import com.samsung.hackathon.drawtogether.communication.ServerInterface.ServerApiEventListener;
 import com.samsung.hackathon.drawtogether.model.StepModel;
 import com.samsung.hackathon.drawtogether.model.StrokeModel;
@@ -83,10 +85,6 @@ public class CreatorActivity extends AppCompatActivity {
     private SpenPenPresetPreviewManager mPenPresetPreviewManager;
 
     private ArrayList<StrokeModel> mStrokeList;
-    /* [ReplayTest]
-    private ArrayList<StrokeModel> mDupStrokeList;
-    */
-
     private ArrayList<StepModel> mStepModelList;
     private String mTempFileName;
 
@@ -115,13 +113,6 @@ public class CreatorActivity extends AppCompatActivity {
     private ImageButton mShowPresetBtn;
     private ImageButton mAddPresetBtn;
     private Button mEditPresetBtn;
-
-    /* [ReplayTest]
-    private Button mStartRecordBtn;
-    private Button mStopRecordBtn;
-    private Button mStartReplayBtn;
-    private Button mStopReplayBtn;
-    */
 
     // dialogs
     private AlertDialog mUploadConfirmDlg;
@@ -335,9 +326,6 @@ public class CreatorActivity extends AppCompatActivity {
                             mNextStepBtn.setEnabled(true);
                         }
 
-                        /* [ReplayTest]
-                        mDupStrokeList.add(strokeModel);
-                        */
                         App.L.d("[ObjectAdded] added!");
                     }
                 }
@@ -550,59 +538,6 @@ public class CreatorActivity extends AppCompatActivity {
                     Toast.makeText(mContext, R.string.cant_upload_file, Toast.LENGTH_LONG).show();
                 }
             };
-
-    /* [ReplayTest]
-    private View.OnClickListener mStartRecordBtnListener = new View.OnClickListener() {
-        @Override
-        public void onClick(final View view) {
-            if (mSpenPageDoc == null) {
-                return;
-            }
-
-            mSpenPageDoc.startRecord();
-
-            for (StrokeModel model : mDupStrokeList) {
-                App.L.d(model.toString());
-                mSpenPageDoc.appendObject(StrokeModelConvertUtils.convertToSpenObjectStroke(model));
-            }
-
-            mSpenPageDoc.stopRecord();
-        }
-    };
-
-    private View.OnClickListener mStopRecordBtnListener = new View.OnClickListener() {
-        @Override
-        public void onClick(final View view) {
-            if (mSpenPageDoc == null) {
-                return;
-            }
-
-            mSpenPageDoc.stopRecord();
-        }
-    };
-
-    private View.OnClickListener mStartReplayBtnListener = new View.OnClickListener() {
-        @Override
-        public void onClick(final View view) {
-            if (mSpenSurfaceView == null) {
-                return;
-            }
-
-            mSpenSurfaceView.startReplay();
-        }
-    };
-
-    private View.OnClickListener mStopReplayBtnListener = new View.OnClickListener() {
-        @Override
-        public void onClick(final View view) {
-            if (mSpenSurfaceView == null) {
-                return;
-            }
-
-            mSpenSurfaceView.stopReplay();
-        }
-    };
-    */
 
     private void selectPresetByIndex(final int selectedIdx) {
         final float density = getResources().getDisplayMetrics().density;
@@ -904,20 +839,6 @@ public class CreatorActivity extends AppCompatActivity {
 
         mPresetLayout = (LinearLayout) findViewById(R.id.preset_layout);
 
-        /* [ReplayTest]
-        mStartRecordBtn = (Button) findViewById(R.id.test_start_record);
-        mStartRecordBtn.setOnClickListener(mStartRecordBtnListener);
-
-        mStopRecordBtn = (Button) findViewById(R.id.test_stop_record);
-        mStopRecordBtn.setOnClickListener(mStopRecordBtnListener);
-
-        mStartReplayBtn = (Button) findViewById(R.id.test_start_replay);
-        mStartReplayBtn.setOnClickListener(mStartReplayBtnListener);
-
-        mStopReplayBtn = (Button) findViewById(R.id.test_stop_replay);
-        mStopReplayBtn.setOnClickListener(mStopReplayBtnListener);
-        */
-
         selectButton(mPenBtn);
     }
 
@@ -963,48 +884,79 @@ public class CreatorActivity extends AppCompatActivity {
 
                     @Override
                     public void onClick(final DialogInterface dlg, final int which) {
-                        // TODO: 오래 걸리니깐 워커 쓰레드에서 수행하도록 변경 필요. 아직은 테스트 중
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                // 중간저장하지 않은 판서 데이터가 있다면 stepModel에 저장
+                                if (!mStrokeList.isEmpty()) {
+                                    CreatorActivity.this.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            addStrokeModelToStepModel();
+                                        }
+                                    });
+                                }
 
-                        // 중간저장하지 않은 판서 데이터가 있다면 stepModel에 저장
-                        if (!mStrokeList.isEmpty()) {
-                            addStrokeModelToStepModel();
-                        }
+                                final byte[] strokeData = serializeStrokeData();
 
-                        final Bitmap thumbnail = createThumbnail();
-                        if (thumbnail == null) {
-                            App.L.e("thumbnail is null");
-                            Toast.makeText(CreatorActivity.this, R.string.cant_upload_file,
-                                    Toast.LENGTH_LONG).show();
-                            return;
-                        }
+                                if (strokeData == null) {
+                                    App.L.e("strokeData is null");
+                                    CreatorActivity.this.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Toast.makeText(CreatorActivity.this,
+                                                    R.string.cant_upload_file,
+                                                    Toast.LENGTH_LONG).show();
+                                        }
+                                    });
+                                }
 
-                        final ByteBuffer byteBuffer = ByteBuffer.allocate(thumbnail.getByteCount());
-                        thumbnail.copyPixelsToBuffer(byteBuffer);
+                                final Bitmap thumbnail = createThumbnail();
+//                        File thumbnailFile = createThumbnail();
+                                if (thumbnail == null) {
+                                    App.L.e("thumbnail is null");
+                                    CreatorActivity.this.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Toast.makeText(CreatorActivity.this,
+                                                    R.string.cant_upload_file,
+                                                    Toast.LENGTH_LONG).show();
+                                        }
+                                    });
+                                }
 
-                        if (byteBuffer.hasArray()) {
-                            try {
-                                // TODO: byte array로 만들어서 write
-                            } catch (BufferUnderflowException e) {
-                                App.L.e("BufferUnderflowException occurred");
-                                e.printStackTrace();
+                                final ByteBuffer byteBuffer =
+                                        ByteBuffer.allocate(thumbnail.getByteCount());
+                                thumbnail.copyPixelsToBuffer(byteBuffer);
+
+                                if (byteBuffer.hasArray()) {
+                                    try {
+                                        // 판서 데이터와 썸네일 서버로 전송
+                                        ServerInterface.getInstance().uploadFile(
+                                                byteBuffer.array(), mTempFileName + ".png",
+                                                strokeData, mTempFileName + ".dat",
+                                                mFileUploadEventListener
+                                        );
+
+                                    } catch (BufferUnderflowException e) {
+                                        App.L.e("BufferUnderflowException occurred");
+                                        e.printStackTrace();
+                                    }
+                                }
+
+                                App.L.d("thumbnailSize=" + thumbnail.getByteCount() +
+                                        ", strokeDataSize=" + strokeData.length);
+
+                                if (thumbnail.isRecycled()) {
+                                    thumbnail.recycle();
+                                }
                             }
-                        }
+                        }).start();
 
-                        final byte[] strokeData = serializeStrokeData();
 
-                        if (strokeData == null) {
-                            App.L.e("strokeData is null");
-                            Toast.makeText(CreatorActivity.this, R.string.cant_upload_file,
-                                    Toast.LENGTH_LONG).show();
-                            return;
-                        }
-
-                        App.L.d("thumbnailSize=" + thumbnail.getByteCount() + ", strokeDataSize="
-                                + strokeData.length);
-
-                        // TODO: 판서 데이터와 썸네일 서버로 전송
 
                         // 일단 로컬에 저장
+                        /*
                         final String directoryPath = new StringBuilder(getExternalCacheDir()
                                 .getAbsolutePath()).toString();
                         final String fileName = "stroke_data.dat";
@@ -1023,10 +975,9 @@ public class CreatorActivity extends AppCompatActivity {
                                 e.printStackTrace();
                             }
                         }
+                        */
 
-                        if (thumbnail.isRecycled()) {
-                            thumbnail.recycle();
-                        }
+
                     }
                 })
                 .setNegativeButton(R.string.dlg_no, null)
@@ -1036,9 +987,6 @@ public class CreatorActivity extends AppCompatActivity {
     private void initializeStrokeDataModels() {
         App.L.d("");
         mStrokeList = new ArrayList<StrokeModel>();
-        /* [ReplayTest]
-        mDupStrokeList = new ArrayList<StrokeModel>();
-        */
         mStepModelList = new ArrayList<StepModel>();
         mTempFileName = UUID.randomUUID().toString();
     }

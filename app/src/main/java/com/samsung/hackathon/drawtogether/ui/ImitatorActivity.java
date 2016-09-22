@@ -194,15 +194,16 @@ public class ImitatorActivity extends AppCompatActivity {
             }
 
             App.L.d("stopRecord");
-            mSpenPageDoc.stopRecord();
-
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            if (mSpenPageDoc.isRecording()) {
+                mSpenPageDoc.stopRecord();
             }
 
-            mSpenSurfaceView.startReplay();
+            mSpenSurfaceView.cancelStroke();
+            if (mSpenSurfaceView.getReplayState() == SpenSurfaceView.REPLAY_STATE_STOPPED) {
+                App.L.d("startReplay");
+                mSpenSurfaceView.startReplay();
+            }
+
             enableButton(false);
         }
     };
@@ -584,17 +585,19 @@ public class ImitatorActivity extends AppCompatActivity {
 
         @Override
         public void onCompleted() {
+
+            final int sizeOfReplayData = mReplayableStrokeList.size();
+
+            App.L.d("mReplayableStrokeList.size()=" + sizeOfReplayData);
+            ArrayList<SpenObjectBase> objectList = mSpenPageDoc.getObjectList();
+
+            for (int i = 0; i < sizeOfReplayData; ++i) {
+                mSpenPageDoc.removeObject(objectList.get(objectList.size() - 1));
+            }
+
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    final int sizeOfReplayData = mReplayableStrokeList.size();
-
-                    App.L.d("mReplayableStrokeList.size()=" + sizeOfReplayData);
-                    ArrayList<SpenObjectBase> objectList = mSpenPageDoc.getObjectList();
-
-                    for (int i = 0; i < sizeOfReplayData; ++i) {
-                        mSpenPageDoc.removeObject(objectList.get(objectList.size() - 1));
-                    }
 
                     mSpenPageDoc.undoToTag();
                     mSpenSurfaceView.update();
@@ -761,11 +764,13 @@ public class ImitatorActivity extends AppCompatActivity {
 
         // stop record & replay
         if (mSpenPageDoc != null && mSpenPageDoc.isRecording()) {
+            App.L.d("stopRecord");
             mSpenPageDoc.stopRecord();
         }
 
         if (mSpenSurfaceView != null &&
                 mSpenSurfaceView.getReplayState() == SpenSurfaceView.REPLAY_STATE_PLAYING) {
+            App.L.d("stopReplay");
             mSpenSurfaceView.stopReplay();
         }
 
