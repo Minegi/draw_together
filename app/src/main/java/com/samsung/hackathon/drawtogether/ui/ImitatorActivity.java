@@ -4,16 +4,15 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -56,14 +55,11 @@ import com.samsung.hackathon.drawtogether.util.BitmapUtils;
 import com.samsung.hackathon.drawtogether.util.SPenSdkUtils;
 import com.samsung.hackathon.drawtogether.util.StrokeModelConvertUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.StreamCorruptedException;
 import java.util.ArrayList;
 import java.util.List;
@@ -690,7 +686,7 @@ public class ImitatorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_imitator);
         mContext = getApplicationContext();
 
-        setStatusBarColor(getColor(R.color.colorPrimary));
+        setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimary));
 
         mSpenViewContainer = (FrameLayout) findViewById(R.id.spen_view_container);
         mSpenViewLayout = (RelativeLayout) findViewById(R.id.spen_view_layout);
@@ -725,7 +721,7 @@ public class ImitatorActivity extends AppCompatActivity {
         final String fileName = "stroke_data.dat";
 
         try {
-            fis = new FileInputStream(directoryPath + '/' + fileName);
+            fis = new FileInputStream(directoryPath + File.pathSeparator + fileName);
             ois = new ObjectInputStream(fis);
             if (mStepModelList != null) {
                 mStepModelList = (ArrayList<StepModel>)ois.readObject();
@@ -1025,15 +1021,15 @@ public class ImitatorActivity extends AppCompatActivity {
 
     private void initializeStrokeDataModels() {
         App.L.d("");
-        mStrokeList = new ArrayList<StrokeModel>();
-        mStepModelList = new ArrayList<StepModel>();
+        mStrokeList = new ArrayList<>();
+        mStepModelList = new ArrayList<>();
 
         mTempFileName = UUID.randomUUID().toString();
     }
 
     private void loadFavoritePenList() {
         App.L.d("");
-        mFavoritePenList = new ArrayList<SpenSettingPenInfo>();
+        mFavoritePenList = new ArrayList<>();
         final SharedPreferences favoritePenPref =
                 getSharedPreferences(getString(R.string.prefname_favorite_pen), MODE_PRIVATE);
         final int size = favoritePenPref.getInt(getString(R.string.prefattr_favorite_pen_size), 0);
@@ -1222,91 +1218,6 @@ public class ImitatorActivity extends AppCompatActivity {
         mPresetLayout.setVisibility(View.GONE);
         mEditPresetBtn.setVisibility(View.GONE);
         mShowPresetBtn.setVisibility(View.VISIBLE);
-    }
-
-    private Bitmap createThumbnail() {
-        if (mSpenSurfaceView != null) {
-            final String directoryPath = new StringBuilder(getExternalCacheDir()
-                    .getAbsolutePath()).toString();
-            final String fileName = new String(mTempFileName + ".png");
-            App.L.d("directoryPath=" + directoryPath);
-
-            File dir = null;
-            FileOutputStream out = null;
-            try {
-                dir = new File(directoryPath);
-                App.L.d(dir);
-                if (!dir.exists()) {
-                    dir.mkdirs();
-                }
-
-                App.L.d(dir.getAbsolutePath() + '/' + fileName);
-                // TODO: 썸네일의 크기 변경 필요
-                final float width = getResources().getDimension(R.dimen.thumbnail_width);
-                final float height = getResources().getDimension(R.dimen.thumbnail_height);
-                App.L.d("width=" + width + ",height=" + height);
-                out = new FileOutputStream(dir.getAbsolutePath() + '/' + fileName);
-                final Bitmap scaledBitmap = Bitmap.createScaledBitmap(
-                        mSpenSurfaceView.capturePage(1.0f), (int)width, (int)height, true);
-                scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-                return scaledBitmap;
-            } catch (FileNotFoundException e) {
-                App.L.e("FileNotFoundException occurred");
-                e.printStackTrace();
-            } catch (IOException e) {
-                App.L.e("IOException occurred");
-                e.printStackTrace();
-            } finally {
-                try {
-                    if (out != null) {
-                        out.close();
-                    }
-                } catch (Exception e) {
-                    App.L.e("Exception occurred");
-                    e.printStackTrace();
-                }
-            }
-        }
-        return null;
-    }
-
-    private byte[] serializeStrokeData() {
-        if (mStepModelList == null) {
-            App.L.warning("mStepModelList is null");
-            return null;
-        }
-
-        ObjectOutputStream oos = null;
-        ByteArrayOutputStream baos = null;
-        try {
-            baos = new ByteArrayOutputStream();
-            oos = new ObjectOutputStream(baos);
-
-            oos.writeObject(mStepModelList);
-            App.L.d("baos.toByteArray().length=" + baos.toByteArray().length);
-            return baos.toByteArray();
-
-        } catch (FileNotFoundException e) {
-            App.L.e("FileNotFoundException occurred");
-            e.printStackTrace();
-        } catch (IOException e) {
-            App.L.e("IOException occurred");
-            e.printStackTrace();
-        } finally {
-            try {
-                if (oos != null) {
-                    oos.close();
-                }
-                if (baos != null) {
-                    baos.close();
-                }
-            } catch (IOException e) {
-                App.L.e("IOException occurred");
-                e.printStackTrace();
-            }
-        }
-
-        return null;
     }
 
     private boolean isStrokeDataExist() {

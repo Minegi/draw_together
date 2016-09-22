@@ -27,12 +27,13 @@ public interface ServerAPI {
 //    Call<ResponseBody> uploadFile(@Path("filename") String filename, @Part MultipartBody.Part strokeData);
 
     @Multipart
-    @POST("upload")
-    Call<ResponseBody> uploadFile(@Part MultipartBody.Part file);
+    @POST("upload/{filename}")
+    Call<ResponseBody> uploadFile(@Path("filename") String fileName, @Part MultipartBody.Part file);
 
     @Multipart
-    @POST("upload")
-    Call<ResponseBody> uploadFile(@Part MultipartBody.Part file1, @Part MultipartBody.Part file2);
+    @POST("upload/{filename}")
+    Call<ResponseBody> uploadFile(@Path("filename") String fileName,
+                                  @Part MultipartBody.Part file1, @Part MultipartBody.Part file2);
 
     @Streaming
     @GET("download/{filename}")

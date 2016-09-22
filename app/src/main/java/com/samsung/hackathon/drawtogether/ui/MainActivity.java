@@ -12,6 +12,7 @@ import android.widget.Toast;
 
 import com.samsung.hackathon.drawtogether.App;
 import com.samsung.hackathon.drawtogether.R;
+import com.samsung.hackathon.drawtogether.util.FileHelper;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -96,5 +97,12 @@ public class MainActivity extends AppCompatActivity {
                 })
                 .setNegativeButton(R.string.dlg_no, null)
                 .create().show();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        FileHelper.getInstance().clearCacheFiles(this);
     }
 }

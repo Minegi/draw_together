@@ -22,6 +22,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -52,6 +53,7 @@ import com.samsung.hackathon.drawtogether.communication.ServerInterface.ServerAp
 import com.samsung.hackathon.drawtogether.model.StepModel;
 import com.samsung.hackathon.drawtogether.model.StrokeModel;
 import com.samsung.hackathon.drawtogether.util.BitmapUtils;
+import com.samsung.hackathon.drawtogether.util.FileHelper;
 import com.samsung.hackathon.drawtogether.util.SPenSdkUtils;
 import com.samsung.hackathon.drawtogether.util.StrokeModelConvertUtils;
 
@@ -114,6 +116,8 @@ public class CreatorActivity extends AppCompatActivity {
     private ImageButton mShowPresetBtn;
     private ImageButton mAddPresetBtn;
     private Button mEditPresetBtn;
+
+    private EditText mArtworkTitle;
 
     // dialogs
     private AlertDialog mUploadConfirmDlg;
@@ -524,7 +528,7 @@ public class CreatorActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(final Throwable t) {
                     App.L.e(t.getMessage());
-                    Toast.makeText(mContext, R.string.cant_upload_file, Toast.LENGTH_LONG).show();
+                    showCantUploadFileToast();
                 }
             };
 
@@ -606,7 +610,7 @@ public class CreatorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_creator);
         mContext = getApplicationContext();
 
-        setStatusBarColor(getColor(R.color.colorPrimary));
+        setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimary));
 
         mSpenViewContainer = (FrameLayout) findViewById(R.id.spen_view_container);
         mSpenViewLayout = (RelativeLayout) findViewById(R.id.spen_view_layout);
@@ -668,8 +672,6 @@ public class CreatorActivity extends AppCompatActivity {
         if (mEraserSettingView != null) {
             mEraserSettingView.close();
         }
-
-        //FileHelper.getInstance().clearCacheFiles(this);
     }
 
     private void initializeSpenSdk() {
@@ -760,8 +762,9 @@ public class CreatorActivity extends AppCompatActivity {
 
         // pen setting
         final SpenSettingPenInfo penInfo = new SpenSettingPenInfo();
+        penInfo.name = getString(R.string.pencil_path);
         penInfo.color = Color.BLACK;
-        penInfo.size = 10;
+        penInfo.size = 50;
         mSpenSurfaceView.setPenSettingInfo(penInfo);
         mPenSettingView.setInfo(penInfo);
 
@@ -828,11 +831,14 @@ public class CreatorActivity extends AppCompatActivity {
 
         mPresetLayout = (LinearLayout) findViewById(R.id.preset_layout);
 
+        mArtworkTitle = new EditText(this);
+
         selectButton(mPenBtn);
     }
 
     private void createDialogs() {
         App.L.d("");
+
         mDeleteAllDlg = new AlertDialog.Builder(CreatorActivity.this,
                 R.style.DialogTheme)
                 .setTitle(R.string.dlg_delete_all)
@@ -865,17 +871,38 @@ public class CreatorActivity extends AppCompatActivity {
                 .setNegativeButton(R.string.dlg_no, null)
                 .create();
 
+        final int horizontalMargin = (int)(20 * getResources().getDisplayMetrics().density);
+
         mUploadConfirmDlg = new AlertDialog.Builder(CreatorActivity.this,
                 R.style.DialogTheme)
                 .setTitle(R.string.cd_save)
                 .setMessage(R.string.dlg_save_and_upload_description)
+                .setView(mArtworkTitle, horizontalMargin, 0, horizontalMargin, 0)
                 .setPositiveButton(R.string.dlg_yes, new DialogInterface.OnClickListener() {
 
                     @Override
                     public void onClick(final DialogInterface dlg, final int which) {
+                        if (mArtworkTitle == null) {
+                            showCantUploadFileToast();
+                            return;
+                        }
+
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
+                                final String artworkTitle = mArtworkTitle.getText().toString();
+                                if (artworkTitle == null || artworkTitle.isEmpty()) {
+                                    CreatorActivity.this.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Toast.makeText(CreatorActivity.this,
+                                                    R.string.input_title, Toast.LENGTH_LONG).show();
+                                        }
+                                    });
+                                    return;
+                                }
+                                App.L.d("artworkTitle=" + artworkTitle);
+
                                 // 중간저장하지 않은 판서 데이터가 있다면 stepModel에 저장
                                 if (!mStrokeList.isEmpty()) {
                                     addStrokeModelToStepModel();
@@ -894,73 +921,37 @@ public class CreatorActivity extends AppCompatActivity {
                                     CreatorActivity.this.runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            Toast.makeText(CreatorActivity.this,
-                                                    R.string.cant_upload_file,
-                                                    Toast.LENGTH_LONG).show();
+                                            showCantUploadFileToast();
                                         }
                                     });
+                                    return;
                                 }
 
-                                final Bitmap thumbnail = createThumbnail();
+                                String directoryPath = new StringBuilder(getExternalCacheDir()
+                                        .getAbsolutePath()).toString();
+                                String fileName = new String(mTempFileName + ".png");
 
-                                if (thumbnail == null) {
-                                    App.L.e("thumbnail is null");
+                                final boolean resultOfCreateThumbnail = createThumbnail(
+                                        directoryPath, fileName);
+
+                                if (!resultOfCreateThumbnail) {
+                                    App.L.e("create thumbnail is failed");
                                     CreatorActivity.this.runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
-                                            Toast.makeText(CreatorActivity.this,
-                                                    R.string.cant_upload_file,
-                                                    Toast.LENGTH_LONG).show();
+                                            showCantUploadFileToast();
                                         }
                                     });
+                                    return;
                                 }
 
-                                final ByteBuffer byteBuffer =
-                                        ByteBuffer.allocate(thumbnail.getByteCount());
-                                thumbnail.copyPixelsToBuffer(byteBuffer);
+                                // 판서 데이터와 썸네일 서버로 전송
+                                ServerInterface.getInstance().uploadFile(new File(directoryPath
+                                + File.separator + fileName), mTempFileName + ".png",
+                                        strokeData, mTempFileName + ".dat", artworkTitle,
+                                        mFileUploadEventListener);
 
-                                if (byteBuffer.hasArray()) {
-                                    try {
-                                        // 판서 데이터와 썸네일 서버로 전송
-                                        ServerInterface.getInstance().uploadFile(
-                                                byteBuffer.array(), mTempFileName + ".jpg",
-                                                strokeData, mTempFileName + ".dat",
-                                                mFileUploadEventListener
-                                        );
-
-                                    } catch (BufferUnderflowException e) {
-                                        App.L.e("BufferUnderflowException occurred");
-                                        e.printStackTrace();
-                                    }
-                                }
-
-                                App.L.d("thumbnailSize=" + thumbnail.getByteCount() +
-                                        ", strokeDataSize=" + strokeData.length);
-
-                                if (thumbnail.isRecycled()) {
-                                    thumbnail.recycle();
-                                }
-
-                                // TODO: 테스트 코드이므로 지워야 함
-                                // 일단 로컬에 저장
-                                final String directoryPath = new StringBuilder(getExternalCacheDir()
-                                        .getAbsolutePath()).toString();
-                                final String fileName = "stroke_data.dat";
-                                FileOutputStream fos = null;
-                                try {
-                                    fos = new FileOutputStream(directoryPath + '/' + fileName);
-                                    fos.write(strokeData);
-                                } catch (FileNotFoundException e) {
-                                    e.printStackTrace();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                } finally {
-                                    try {
-                                        fos.close();
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
+                                App.L.d("strokeDataSize=" + strokeData.length);
                             }
                         }).start();
                     }
@@ -1168,15 +1159,15 @@ public class CreatorActivity extends AppCompatActivity {
         mShowPresetBtn.setVisibility(View.VISIBLE);
     }
 
-    private Bitmap createThumbnail() {
+    private boolean createThumbnail(final String directoryPath, final String fileName) {
+        boolean result = false;
         if (mSpenSurfaceView != null) {
-            final String directoryPath = new StringBuilder(getExternalCacheDir()
-                    .getAbsolutePath()).toString();
-            final String fileName = new String(mTempFileName + ".jpg");
+
             App.L.d("directoryPath=" + directoryPath);
 
             File dir = null;
             FileOutputStream out = null;
+            Bitmap scaledBitmap = null;
             try {
                 dir = new File(directoryPath);
                 App.L.d(dir);
@@ -1184,16 +1175,16 @@ public class CreatorActivity extends AppCompatActivity {
                     dir.mkdirs();
                 }
 
-                App.L.d(dir.getAbsolutePath() + '/' + fileName);
+                App.L.d(dir.getAbsolutePath() + File.separator + fileName);
                 // TODO: 썸네일의 크기 변경 필요
                 final float width = getResources().getDimension(R.dimen.thumbnail_width);
                 final float height = getResources().getDimension(R.dimen.thumbnail_height);
                 App.L.d("width=" + width + ",height=" + height);
-                out = new FileOutputStream(dir.getAbsolutePath() + '/' + fileName);
-                final Bitmap scaledBitmap = Bitmap.createScaledBitmap(
+                out = new FileOutputStream(dir.getAbsolutePath() + File.separator + fileName);
+                scaledBitmap = Bitmap.createScaledBitmap(
                         mSpenSurfaceView.capturePage(1.0f), (int)width, (int)height, true);
-                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-                return scaledBitmap;
+                scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                result = true;
             } catch (FileNotFoundException e) {
                 App.L.e("FileNotFoundException occurred");
                 e.printStackTrace();
@@ -1203,13 +1194,19 @@ public class CreatorActivity extends AppCompatActivity {
             } finally {
                 try {
                     out.close();
+                    App.L.d("scaledBitmapSize=" + scaledBitmap.getByteCount());
+                    if (scaledBitmap.isRecycled()) {
+                        scaledBitmap.recycle();
+                    }
                 } catch (Exception e) {
                     App.L.e("Exception occurred");
                     e.printStackTrace();
                 }
             }
         }
-        return null;
+
+        App.L.d("result=" + result);
+        return result;
     }
 
     private byte[] serializeStrokeData() {
@@ -1306,5 +1303,9 @@ public class CreatorActivity extends AppCompatActivity {
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(color);
         }
+    }
+
+    private void showCantUploadFileToast() {
+        Toast.makeText(CreatorActivity.this, R.string.cant_upload_file, Toast.LENGTH_LONG).show();
     }
 }

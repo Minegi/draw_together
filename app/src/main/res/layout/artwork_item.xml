@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
-    android:layout_width="fill_parent"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center_vertical"
     >
@@ -11,7 +11,7 @@
         android:layout_width="@dimen/thumbnail_width"
         android:layout_height="@dimen/thumbnail_height"
         android:layout_gravity="center|center_vertical"
-        android:background="#88000000"
+        android:background="@android:color/transparent"
         />
 
     <TextView
@@ -23,6 +23,7 @@
         android:ellipsize="end"
         android:textColor="@android:color/black"
         android:gravity="center|center_vertical"
+        android:maxLines="1"
         android:layout_marginTop="5dip"
         />
 

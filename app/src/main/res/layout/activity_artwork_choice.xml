@@ -16,9 +16,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:columnWidth="200dip"
-        android:horizontalSpacing="10dip"
-        android:verticalSpacing="10dip"
-        android:numColumns="2"
+        android:horizontalSpacing="5dip"
+        android:verticalSpacing="30dip"
+        android:numColumns="1"
+        android:gravity="center|center_vertical"
         />
 
 </RelativeLayout>

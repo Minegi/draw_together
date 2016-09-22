@@ -15,6 +15,7 @@
     <string name="is_already_exist_same_pen">Already exists.</string>
     <string name="cant_upload_file">업로드에 실패했습니다.</string>
     <string name="upload_complete">업로드를 완료하였습니다.</string>
+    <string name="input_title">제목을 입력해주세요.</string>
 
     <string name="edit">편집</string>
     <string name="done">완료</string>
@@ -60,6 +61,8 @@
     <string name="dlg_end">종료</string>
     <string name="dlg_confirm_close_app">정말로 DrawTogether를 종료하시겠습니까?</string>
     <string name="dlg_confirm_move_back">정말로 뒤로 이동하시겠습니까?</string>
+    <string name="dlg_download">내려받기</string>
+    <string name="dlg_confirm_download">이 작품을 내려받으시겠습니까?</string>
 
     <!-- used in ImitatorActivity -->
     <string name="cant_move_next_step">다음 단계로 넘어갈 수 없습니다.</string>
@@ -67,5 +70,9 @@
 
     <!-- used in ArtworkChoiceActivity -->
     <string name="cant_get_artwork_list">서버에서 작품 리스트들을 가져올 수 없습니다.</string>
+    <string name="download_completed">다운로드가 완료되었습니다.</string>
+    <string name="cant_download_file">파일을 다운로드할 수 없습니다.</string>
+
+
 
 </resources>

@@ -98,7 +98,6 @@ public class ArtworkAdapter extends BaseAdapter {
     // position 에 위치한 데이터를 화면에 출력하는데 사용될 View 를 리턴 : 필수구현
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-
         View columnView = convertView;
         ViewHolder viewHolder;
 
