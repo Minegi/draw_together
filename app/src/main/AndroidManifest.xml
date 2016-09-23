@@ -30,6 +30,9 @@
             android:name=".ui.ArtworkChoiceActivity"
             android:theme="@style/AppTheme" />
         <activity
+            android:name=".ui.ArtworkMarketActivity"
+            android:theme="@style/AppTheme" />
+        <activity
             android:name=".ui.ImitatorActivity"
             android:configChanges="locale|keyboardHidden|orientation|screenSize"
             android:theme="@style/AppTheme.NoActionBar"

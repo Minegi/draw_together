@@ -9,6 +9,13 @@
     android:orientation="vertical"
     >
 
+    <ImageView
+        android:src="@drawable/fake_store"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scaleType="fitCenter"
+        android:adjustViewBounds="true"/>
+
     <GridView
         android:id="@+id/artwork_grid_view"
         android:layout_width="match_parent"
