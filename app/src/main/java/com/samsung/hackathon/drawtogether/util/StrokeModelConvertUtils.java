@@ -22,8 +22,12 @@ public class StrokeModelConvertUtils {
         stroke.setYPoints(spenStroke.getYPoints().clone());
         stroke.setPressures(spenStroke.getPressures().clone());
         stroke.setTimeStamps(spenStroke.getTimeStamps().clone());
-        stroke.setTilts(spenStroke.getTilts().clone());
-        stroke.setOrientations(spenStroke.getOrientations().clone());
+        if (spenStroke != null && spenStroke.getTilts() != null) {
+            stroke.setTilts(spenStroke.getTilts().clone());
+        }
+        if (spenStroke != null && spenStroke.getOrientations() != null) {
+            stroke.setOrientations(spenStroke.getOrientations().clone());
+        }
         stroke.setToolType(spenStroke.getToolType());
         stroke.setRotation(spenStroke.getRotation());
         stroke.setResizeOption(spenStroke.getResizeOption());

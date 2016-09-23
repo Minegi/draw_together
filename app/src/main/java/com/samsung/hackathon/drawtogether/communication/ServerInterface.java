@@ -28,8 +28,11 @@ public class ServerInterface {
 
     private static ServerInterface mInstance = new ServerInterface();
 
-    public static final String BASE_URL = "http://192.168.0.11:3100/";
-    public static final String DOWNLOAD_URL = "http://192.168.0.11:3100/download/";
+    public static final String BASE_URL = "http://192.168.43.225:3100/";
+    public static final String DOWNLOAD_URL = "http://192.168.43.225:3100/download/";
+//    public static final String BASE_URL = "http://draw-together-server-minegi.c9users.io/";
+//    public static final String DOWNLOAD_URL =
+//            "http://draw-together-server-minegi.c9users.io/download/";
 
     private Retrofit mRetrofit;
     private ServerAPI mServerAPI;
