@@ -2,15 +2,16 @@ package com.samsung.hackathon.drawtogether.ui;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -22,6 +23,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -59,6 +61,7 @@ import com.samsung.hackathon.drawtogether.util.StrokeModelConvertUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.StreamCorruptedException;
@@ -116,6 +119,8 @@ public class ImitatorActivity extends AppCompatActivity {
     private ImageButton mShowPresetBtn;
     private ImageButton mAddPresetBtn;
     private Button mEditPresetBtn;
+
+    private EditText mArtworkTitle;
 
     // dialogs
     private AlertDialog mSaveConfirmDlg;
@@ -931,6 +936,8 @@ public class ImitatorActivity extends AppCompatActivity {
         mPresetLayout = (LinearLayout) findViewById(R.id.preset_layout);
         mReplayProgressBar = (ProgressBar) findViewById(R.id.replay_progress_bar);
 
+        mArtworkTitle = new EditText(this);
+
         selectButton(mPenBtn);
     }
 
@@ -970,19 +977,76 @@ public class ImitatorActivity extends AppCompatActivity {
                 .setNegativeButton(R.string.dlg_no, null)
                 .create();
 
+        final int horizontalMargin = (int)(20 * getResources().getDisplayMetrics().density);
+
         mSaveConfirmDlg = new AlertDialog.Builder(ImitatorActivity.this,
                 R.style.DialogTheme)
                 .setTitle(R.string.cd_save)
-                .setMessage(R.string.dlg_save_and_upload_description)
+                .setMessage(R.string.dlg_confirm_save_to_picture)
+                .setView(mArtworkTitle, horizontalMargin, 0, horizontalMargin, 0)
                 .setPositiveButton(R.string.dlg_yes, new DialogInterface.OnClickListener() {
 
                     @Override
                     public void onClick(final DialogInterface dlg, final int which) {
-                        // TODO: 그림 파일로 저장
+                        if (mArtworkTitle == null) {
+                            showCantSaveFileToast();
+                            return;
+                        }
+
+                        if (createImageToPicturePath(mArtworkTitle.getText().toString())) {
+                            Toast.makeText(ImitatorActivity.this, R.string.save_complete,
+                                    Toast.LENGTH_LONG).show();
+                        } else {
+                            showCantSaveFileToast();
+                            return;
+                        }
+
                     }
                 })
                 .setNegativeButton(R.string.dlg_no, null)
                 .create();
+    }
+
+    private void showCantSaveFileToast() {
+        Toast.makeText(ImitatorActivity.this, R.string.cant_create_img,
+                Toast.LENGTH_LONG).show();
+    }
+
+    private boolean createImageToPicturePath(final String fileName) {
+        final String picturesDir = Environment.getExternalStorageDirectory() + File.separator +
+                Environment.DIRECTORY_PICTURES;
+        App.L.d(fileName);
+        if (mSpenSurfaceView == null) {
+            return false;
+        }
+
+        boolean result = false;
+        File file = null;
+        FileOutputStream out = null;
+        Bitmap bitmap = null;
+        try {
+            file = new File(picturesDir);
+            App.L.d(file.getAbsolutePath() + File.separator + fileName + ".png");
+            out = new FileOutputStream(file.getAbsolutePath() + File.separator
+            + fileName + ".png");
+            bitmap = mSpenSurfaceView.capturePage(1.0f);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            result = true;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (out != null) {
+                    out.close();
+                }
+                bitmap.recycle();
+            } catch (IOException e) {
+                e.printStackTrace();
+                result = false;
+            }
+        }
+
+        return result;
     }
 
     private void initializeStrokeDataModels() {

@@ -1160,9 +1160,6 @@ public class CreatorActivity extends AppCompatActivity {
     private boolean createThumbnail(final String directoryPath, final String fileName) {
         boolean result = false;
         if (mSpenSurfaceView != null) {
-
-            App.L.d("directoryPath=" + directoryPath);
-
             File dir = null;
             FileOutputStream out = null;
             Bitmap scaledBitmap = null;
@@ -1191,11 +1188,11 @@ public class CreatorActivity extends AppCompatActivity {
                 e.printStackTrace();
             } finally {
                 try {
-                    out.close();
-                    App.L.d("scaledBitmapSize=" + scaledBitmap.getByteCount());
-                    if (scaledBitmap.isRecycled()) {
-                        scaledBitmap.recycle();
+                    if (out != null) {
+                        out.close();
                     }
+                    App.L.d("scaledBitmapSize=" + scaledBitmap.getByteCount());
+                    scaledBitmap.recycle();
                 } catch (Exception e) {
                     App.L.e("Exception occurred");
                     e.printStackTrace();
