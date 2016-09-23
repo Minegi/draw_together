@@ -1308,8 +1308,8 @@ public class CreatorActivity extends AppCompatActivity {
     public void onBackPressed() {
         new AlertDialog.Builder(CreatorActivity.this,
                 R.style.DialogTheme)
-                .setTitle(R.string.dlg_end)
-                .setMessage(R.string.dlg_confirm_move_back)
+                .setTitle(R.string.dlg_move_to_main)
+                .setMessage(R.string.dlg_confirm_move_to_main)
                 .setPositiveButton(R.string.dlg_yes, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(final DialogInterface dlg, final int which) {

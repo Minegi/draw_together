@@ -6,8 +6,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.view.MotionEvent;
 import android.view.View;
-import android.widget.ImageView;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.samsung.hackathon.drawtogether.App;
@@ -19,10 +20,10 @@ public class MainActivity extends AppCompatActivity {
     private Context mContext;
 
     // buttons
-    private ImageView mCreatorBtn;
-    private ImageView mImitatorBtn;
-    private ImageView mSendBtn;
-    private ImageView mMarketBtn;
+    private ImageButton mCreatorBtn;
+    private ImageButton mImitatorBtn;
+    private ImageButton mSendBtn;
+    private ImageButton mMarketBtn;
 
     // listeners
     private View.OnClickListener mCreatorBtnClickListener = new View.OnClickListener() {
@@ -57,6 +58,31 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private View.OnTouchListener mBtnTouchListener = new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                final int action = motionEvent.getAction();
+                switch (action) {
+                    case MotionEvent.ACTION_DOWN:
+                        view.setAlpha(0.5f);
+                        return false;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        view.setAlpha(1.0f);
+                        return false;
+                    case MotionEvent.ACTION_MOVE:
+                        if (view.isPressed()) {
+                            view.setAlpha(0.5f);
+                        } else {
+                            view.setAlpha(1.0f);
+                        }
+                        return false;
+                }
+
+                return false;
+            }
+    };
+
     private void setDefaultBackground(View view) {
         view.setBackgroundResource(R.drawable.frame);
     }
@@ -77,21 +103,25 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeViews() {
         App.L.d("");
-        mCreatorBtn = (ImageView) findViewById(R.id.creator_img);
+        mCreatorBtn = (ImageButton) findViewById(R.id.creator_img);
         mCreatorBtn.setOnClickListener(mCreatorBtnClickListener);
         setDefaultBackground(mCreatorBtn);
+        mCreatorBtn.setOnTouchListener(mBtnTouchListener);
 
-        mImitatorBtn = (ImageView) findViewById(R.id.imitator_img);
+        mImitatorBtn = (ImageButton) findViewById(R.id.imitator_img);
         mImitatorBtn.setOnClickListener(mImitatorBtnClickListener);
         setDefaultBackground(mImitatorBtn);
+        mImitatorBtn.setOnTouchListener(mBtnTouchListener);
 
-        mSendBtn = (ImageView) findViewById(R.id.send_img);
+        mSendBtn = (ImageButton) findViewById(R.id.send_img);
         mSendBtn.setOnClickListener(mSendBtnClickListener);
         setDefaultBackground(mSendBtn);
+        mSendBtn.setOnTouchListener(mBtnTouchListener);
 
-        mMarketBtn = (ImageView) findViewById(R.id.market_img);
+        mMarketBtn = (ImageButton) findViewById(R.id.market_img);
         mMarketBtn.setOnClickListener(mMarketBtnClickListener);
         setDefaultBackground(mMarketBtn);
+        mMarketBtn.setOnTouchListener(mBtnTouchListener);
     }
 
     @Override

@@ -46,7 +46,7 @@
     <string name="cd_edit_preset">프리셋 편집</string>
     <string name="cd_add_preset">프리셋 추가</string>
     <string name="cd_replay">리플레이</string>
-    <string name="cd_save_and_make_next_step">저장 후 다음 단계 생성</string>
+    <string name="cd_save_and_make_next_step">중간 저장 후 다음 단계 생성</string>
     <string name="cd_load_next_step">다음 단계 불러오기</string>
 
     <!-- Dialog -->
@@ -60,11 +60,11 @@
     <string name="draw_data_isnt_exist">업로드할 작업물이 없습니다.</string>
     <string name="dlg_end">종료</string>
     <string name="dlg_confirm_close_app">정말로 DrawTogether를 종료하시겠습니까?</string>
-    <string name="dlg_confirm_move_back">정말로 뒤로 이동하시겠습니까?</string>
+    <string name="dlg_confirm_move_to_main">저장하지 않고 메인 메뉴로 이동하시겠습니까?</string>
     <string name="dlg_download">내려받기</string>
     <string name="dlg_confirm_download">이 작품을 내려받으시겠습니까?</string>
     <string name="dlg_choice_artwork">작품 선택</string>
-
+    <string name="dlg_move_to_main">메인 메뉴로 이동</string>
 
     <!-- used in ImitatorActivity -->
     <string name="cant_move_next_step">다음 단계로 넘어갈 수 없습니다.</string>
@@ -80,6 +80,9 @@
     <string name="dlg_confirm_save_to_picture">현재까지의 작품을 이미지로 저장하시겠습니까?\n저장하시려면 하단에 파일명을 입력해주세요.</string>
     <string name="dlg_confirm_choice_artwork">이 작품을 그리시겠습니까?</string>
     <string name="cant_save_local">저장에 실패하였습니다.</string>
-
+    <string name="cd_creator_mode">창작 모드</string>
+    <string name="cd_imitator_mode">따라 그리는 모드</string>
+    <string name="cd_invite_to_friend">친구 초대하기</string>
+    <string name="cd_market">마켓</string>
 
 </resources>
