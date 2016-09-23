@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private View.OnClickListener mSendBtnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(final View view) {
-            Toast.makeText(mContext, "Send", Toast.LENGTH_LONG).show();
+//            Toast.makeText(mContext, "Send", Toast.LENGTH_LONG).show();
         }
     };
 
@@ -113,10 +113,15 @@ public class MainActivity extends AppCompatActivity {
         setDefaultBackground(mImitatorBtn);
         mImitatorBtn.setOnTouchListener(mBtnTouchListener);
 
+        // disabled 처리
         mSendBtn = (ImageButton) findViewById(R.id.send_img);
+        mSendBtn.setAlpha(0.5f);
+        mSendBtn.setClickable(false);
+        mSendBtn.setFocusable(false);
+        mSendBtn.setEnabled(false);
         mSendBtn.setOnClickListener(mSendBtnClickListener);
         setDefaultBackground(mSendBtn);
-        mSendBtn.setOnTouchListener(mBtnTouchListener);
+//        mSendBtn.setOnTouchListener(mBtnTouchListener);
 
         mMarketBtn = (ImageButton) findViewById(R.id.market_img);
         mMarketBtn.setOnClickListener(mMarketBtnClickListener);
