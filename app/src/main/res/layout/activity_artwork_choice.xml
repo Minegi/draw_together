@@ -16,7 +16,7 @@
         android:id="@+id/artwork_grid_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:columnWidth="220dip"
+        android:columnWidth="200dip"
         android:horizontalSpacing="5dip"
         android:verticalSpacing="5dip"
         android:numColumns="2"

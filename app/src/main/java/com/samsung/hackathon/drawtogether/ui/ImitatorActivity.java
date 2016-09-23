@@ -827,12 +827,9 @@ public class ImitatorActivity extends AppCompatActivity {
 
     private void createSpenNoteDoc() {
         App.L.d("");
-        Display display = getWindowManager().getDefaultDisplay();
-        Rect rect = new Rect();
-        display.getRectSize(rect);
-
+        final int canvasSize = (int)getResources().getDimension(R.dimen.canvas_size);
         try {
-            mSpenNoteDoc = new SpenNoteDoc(mContext, rect.width(), rect.height());
+            mSpenNoteDoc = new SpenNoteDoc(mContext, canvasSize, canvasSize);
         } catch (IOException e) {
             App.L.e("IOException occurred");
             Toast.makeText(mContext, R.string.cant_create_note_doc, Toast.LENGTH_LONG).show();
@@ -884,6 +881,9 @@ public class ImitatorActivity extends AppCompatActivity {
         mSpenPageDoc.setHistoryListener(mHistoryListener);
         mSpenPageDoc.setObjectListener(mSpenObjectEventListener);
         mEraserSettingView.setEraserListener(mEraserListener);
+
+        // fast speed
+        mSpenSurfaceView.setReplaySpeed(2);
 
         // set stroke action
         mSpenSurfaceView.setToolTypeAction(SpenSettingViewInterface.TOOL_SPEN,

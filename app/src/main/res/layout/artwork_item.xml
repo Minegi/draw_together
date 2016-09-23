@@ -9,9 +9,9 @@
 
     <ImageButton
         android:id="@+id/artwork_item_thumbnail"
-        android:layout_width="@dimen/thumbnail_width"
-        android:layout_height="@dimen/thumbnail_width"
-        android:scaleType="fitCenter"
+        android:layout_width="@dimen/half_canvas_size"
+        android:layout_height="@dimen/half_canvas_size"
+        android:scaleType="centerInside"
         android:adjustViewBounds="true"
         android:layout_gravity="center|center_vertical"
         android:background="@android:color/transparent"

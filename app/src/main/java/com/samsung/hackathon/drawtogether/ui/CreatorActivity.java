@@ -722,12 +722,9 @@ public class CreatorActivity extends AppCompatActivity {
 
     private void createSpenNoteDoc() {
         App.L.d("");
-        Display display = getWindowManager().getDefaultDisplay();
-        Rect rect = new Rect();
-        display.getRectSize(rect);
-
+        final int canvasSize = (int)getResources().getDimension(R.dimen.canvas_size);
         try {
-            mSpenNoteDoc = new SpenNoteDoc(mContext, rect.width(), rect.height());
+            mSpenNoteDoc = new SpenNoteDoc(mContext, canvasSize, canvasSize);
         } catch (IOException e) {
             App.L.e("IOException occurred");
             Toast.makeText(mContext, R.string.cant_create_note_doc, Toast.LENGTH_LONG).show();
@@ -1194,12 +1191,13 @@ public class CreatorActivity extends AppCompatActivity {
 
                 App.L.d(dir.getAbsolutePath() + File.separator + fileName);
                 // TODO: 썸네일의 크기 변경 필요
-                final float width = getResources().getDimension(R.dimen.thumbnail_width);
-                final float height = getResources().getDimension(R.dimen.thumbnail_height);
+                final int width = (int)getResources().getDimension(R.dimen.half_canvas_size);
+                final int height = (int)getResources().getDimension(R.dimen.half_canvas_size);
                 App.L.d("width=" + width + ",height=" + height);
                 out = new FileOutputStream(dir.getAbsolutePath() + File.separator + fileName);
                 scaledBitmap = Bitmap.createScaledBitmap(
                         mSpenSurfaceView.capturePage(1.0f), (int)width, (int)height, true);
+//                scaledBitmap = mSpenSurfaceView.capturePage(1.0f);
                 scaledBitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
                 result = true;
             } catch (FileNotFoundException e) {

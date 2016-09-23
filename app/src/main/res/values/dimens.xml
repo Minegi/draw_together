@@ -7,6 +7,8 @@
     <dimen name="fab_margin">0dip</dimen>
     <dimen name="thumbnail_width">144dip</dimen>
     <dimen name="thumbnail_height">256dip</dimen>
+    <dimen name="canvas_size">360dip</dimen>
+    <dimen name="half_canvas_size">180dip</dimen>
     <dimen name="image_size">95dip</dimen>
     <dimen name="image_radius">20dip</dimen>
 
