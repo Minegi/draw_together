@@ -57,6 +57,14 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private void setDefaultBackground(View view) {
+        view.setBackgroundResource(R.drawable.frame);
+    }
+
+    private void setSelectedBackground(View view) {
+        view.setBackgroundResource(0);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         App.L.d("");
@@ -71,15 +79,19 @@ public class MainActivity extends AppCompatActivity {
         App.L.d("");
         mCreatorBtn = (ImageView) findViewById(R.id.creator_img);
         mCreatorBtn.setOnClickListener(mCreatorBtnClickListener);
+        setDefaultBackground(mCreatorBtn);
 
         mImitatorBtn = (ImageView) findViewById(R.id.imitator_img);
         mImitatorBtn.setOnClickListener(mImitatorBtnClickListener);
+        setDefaultBackground(mImitatorBtn);
 
         mSendBtn = (ImageView) findViewById(R.id.send_img);
         mSendBtn.setOnClickListener(mSendBtnClickListener);
+        setDefaultBackground(mSendBtn);
 
         mMarketBtn = (ImageView) findViewById(R.id.market_img);
         mMarketBtn.setOnClickListener(mMarketBtnClickListener);
+        setDefaultBackground(mMarketBtn);
     }
 
     @Override
