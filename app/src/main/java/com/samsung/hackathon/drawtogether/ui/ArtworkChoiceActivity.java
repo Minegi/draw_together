@@ -105,8 +105,8 @@ public class ArtworkChoiceActivity extends AppCompatActivity {
 
         mDownloadConfirmDlg = new AlertDialog.Builder(ArtworkChoiceActivity.this,
                 R.style.DialogTheme)
-                .setTitle(R.string.dlg_download)
-                .setMessage(R.string.dlg_confirm_download)
+                .setTitle(R.string.dlg_choice_artwork)
+                .setMessage(R.string.dlg_confirm_choice_artwork)
                 .setPositiveButton(R.string.dlg_yes, mDownloadAgreeClickListener)
                 .setNegativeButton(R.string.dlg_no, mDownloadDisagreeClickListener)
                 .create();

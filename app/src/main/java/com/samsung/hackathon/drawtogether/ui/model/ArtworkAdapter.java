@@ -2,10 +2,12 @@ package com.samsung.hackathon.drawtogether.ui.model;
 
 import android.app.Activity;
 import android.content.Context;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -15,6 +17,9 @@ import com.samsung.hackathon.drawtogether.R;
 import com.samsung.hackathon.drawtogether.communication.ServerInterface;
 import com.samsung.hackathon.drawtogether.ui.thumbnail.ImageLoader;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +33,7 @@ public class ArtworkAdapter extends BaseAdapter {
     private ArrayList<ArtworkItem> mArtworkItemList = new ArrayList<>();
     private Context mContext;
     private ImageLoader mImageLoader;
+
     private ServerInterface.ServerApiEventListener<List<ArtworkItem>> mGetArtworkListEventListener
             = new ServerInterface.ServerApiEventListener<List<ArtworkItem>>() {
         @Override
@@ -37,9 +43,12 @@ public class ArtworkAdapter extends BaseAdapter {
 
             for (int i = 0; i < artworkList.size(); ++i) {
                 final ArtworkItem item = artworkList.get(i);
+
                 addItem(new ArtworkItem(item.name, item.strokeData,
-                        ServerInterface.DOWNLOAD_URL + item.thumbnail));
-                App.L.d(artworkList.get(i).name);
+                            ServerInterface.DOWNLOAD_URL + item.thumbnail));
+                App.L.d("i=" + i + ", name=" + artworkList.get(i).name +
+                        ", strokeData=" + item.strokeData +
+                        ", thumbnail=" + ServerInterface.DOWNLOAD_URL + item.thumbnail);
             }
         }
 
@@ -107,7 +116,8 @@ public class ArtworkAdapter extends BaseAdapter {
             columnView = inflater.inflate(R.layout.artwork_item, parent, false);
             viewHolder = new ViewHolder();
             viewHolder.name = (TextView) columnView.findViewById(R.id.artwork_item_name);
-            viewHolder.thumbnail = (ImageView) columnView.findViewById(R.id.artwork_item_thumbnail);
+            viewHolder.thumbnail =
+                    (ImageButton) columnView.findViewById(R.id.artwork_item_thumbnail);
             columnView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder)columnView.getTag();
@@ -117,6 +127,11 @@ public class ArtworkAdapter extends BaseAdapter {
 
         if (item != null) {
             viewHolder.name.setText(item.name);
+            viewHolder.thumbnail.setContentDescription(item.name);
+            viewHolder.thumbnail.setEnabled(false);
+            viewHolder.thumbnail.setFocusable(false);
+            viewHolder.thumbnail.setClickable(false);
+            App.L.d(item.thumbnail);
             mImageLoader.DisplayImage(item.thumbnail, viewHolder.thumbnail);
         }
 
@@ -133,6 +148,6 @@ public class ArtworkAdapter extends BaseAdapter {
 
     class ViewHolder {
         public TextView name;
-        public ImageView thumbnail;
+        public ImageButton thumbnail;
     }
 }

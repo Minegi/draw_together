@@ -3,13 +3,14 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="5dip"
     android:gravity="center_vertical"
     >
 
-    <ImageView
+    <ImageButton
         android:id="@+id/artwork_item_thumbnail"
         android:layout_width="@dimen/thumbnail_width"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/thumbnail_width"
         android:scaleType="fitCenter"
         android:adjustViewBounds="true"
         android:layout_gravity="center|center_vertical"
@@ -28,6 +29,7 @@
         android:maxLines="1"
         android:layout_marginTop="5dip"
         android:layout_marginBottom="20dp"
+        android:visibility="gone"
         />
 
 </LinearLayout>

@@ -63,6 +63,8 @@
     <string name="dlg_confirm_move_back">정말로 뒤로 이동하시겠습니까?</string>
     <string name="dlg_download">내려받기</string>
     <string name="dlg_confirm_download">이 작품을 내려받으시겠습니까?</string>
+    <string name="dlg_choice_artwork">작품 선택</string>
+
 
     <!-- used in ImitatorActivity -->
     <string name="cant_move_next_step">다음 단계로 넘어갈 수 없습니다.</string>
@@ -76,6 +78,7 @@
     <string name="cant_download_file">파일을 다운로드할 수 없습니다.</string>
     <string name="stroke_data_path">stroke_path</string>
     <string name="dlg_confirm_save_to_picture">현재까지의 작품을 이미지로 저장하시겠습니까?\n저장하시려면 하단에 파일명을 입력해주세요.</string>
+    <string name="dlg_confirm_choice_artwork">이 작품을 그리시겠습니까?</string>
 
 
 </resources>

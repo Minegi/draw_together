@@ -862,8 +862,9 @@ public class ImitatorActivity extends AppCompatActivity {
 
         // pen setting
         final SpenSettingPenInfo penInfo = new SpenSettingPenInfo();
+        penInfo.name = getString(R.string.pencil_path);
         penInfo.color = Color.BLACK;
-        penInfo.size = 10;
+        penInfo.size = 50;
         mSpenSurfaceView.setPenSettingInfo(penInfo);
         mPenSettingView.setInfo(penInfo);
 
