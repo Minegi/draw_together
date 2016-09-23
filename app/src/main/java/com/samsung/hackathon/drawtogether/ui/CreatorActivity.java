@@ -8,11 +8,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -55,7 +54,6 @@ import com.samsung.hackathon.drawtogether.communication.ServerInterface.ServerAp
 import com.samsung.hackathon.drawtogether.model.StepModel;
 import com.samsung.hackathon.drawtogether.model.StrokeModel;
 import com.samsung.hackathon.drawtogether.util.BitmapUtils;
-import com.samsung.hackathon.drawtogether.util.FileHelper;
 import com.samsung.hackathon.drawtogether.util.SPenSdkUtils;
 import com.samsung.hackathon.drawtogether.util.StrokeModelConvertUtils;
 
@@ -65,13 +63,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import butterknife.ButterKnife;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 
@@ -945,13 +940,38 @@ public class CreatorActivity extends AppCompatActivity {
                                     return;
                                 }
 
-                                // 판서 데이터와 썸네일 서버로 전송
-                                ServerInterface.getInstance().uploadFile(new File(directoryPath
-                                + File.separator + fileName), mTempFileName + ".png",
-                                        strokeData, mTempFileName + ".dat", artworkTitle,
-                                        mFileUploadEventListener);
-
-                                App.L.d("strokeDataSize=" + strokeData.length);
+                                // 로컬 저장 플래그가 활성화 되어있으면 DIRECTORY_PICTURES에 저장한다.
+                                if (App.SAVE_LOCAL_ENABLED) {
+                                    if (createLocalData(strokeData,
+                                            mArtworkTitle.getText().toString())) {
+                                        CreatorActivity.this.runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Toast.makeText(CreatorActivity.this,
+                                                        R.string.save_complete, Toast.LENGTH_LONG)
+                                                        .show();
+                                                finish();
+                                            }
+                                        });
+                                    } else {
+                                        CreatorActivity.this.runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Toast.makeText(CreatorActivity.this,
+                                                        R.string.cant_save_local, Toast.LENGTH_LONG)
+                                                        .show();
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    // 판서 데이터와 썸네일 서버로 전송
+                                    ServerInterface.getInstance().uploadFile(
+                                            new File(directoryPath + File.separator + fileName),
+                                            mTempFileName + ".png",
+                                            strokeData, mTempFileName + ".dat", artworkTitle,
+                                            mFileUploadEventListener);
+                                    App.L.d("strokeDataSize=" + strokeData.length);
+                                }
                             }
                         }).start();
                     }
@@ -1230,8 +1250,14 @@ public class CreatorActivity extends AppCompatActivity {
             e.printStackTrace();
         } finally {
             try {
-                oos.close();
-                baos.close();
+                if (oos != null) {
+                    oos.close();
+                }
+
+                if (baos != null) {
+                    baos.close();
+                }
+
             } catch (IOException e) {
                 App.L.e("IOException occurred");
                 e.printStackTrace();
@@ -1304,5 +1330,53 @@ public class CreatorActivity extends AppCompatActivity {
 
     private void showCantUploadFileToast() {
         Toast.makeText(CreatorActivity.this, R.string.cant_upload_file, Toast.LENGTH_LONG).show();
+    }
+
+    private boolean createLocalData(final byte[] strokeData, final String fileName) {
+        final String picturesDir = Environment.getExternalStorageDirectory() + File.separator +
+                Environment.DIRECTORY_PICTURES;
+        App.L.d(fileName);
+        if (mSpenSurfaceView == null) {
+            return false;
+        }
+
+        boolean result = false;
+        File file = null;
+        FileOutputStream outThumbnail = null;
+        FileOutputStream outStrokeData = null;
+        Bitmap bitmap = null;
+
+        try {
+            file = new File(picturesDir);
+            App.L.d(file.getAbsolutePath() + File.separator + fileName + ".png");
+            outThumbnail = new FileOutputStream(file.getAbsolutePath() + File.separator
+                    + fileName + ".png");
+            bitmap = mSpenSurfaceView.capturePage(1.0f);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outThumbnail);
+            outStrokeData = new FileOutputStream(file.getAbsolutePath() + File.separator
+                    + fileName + ".dat");
+            App.L.d(file.getAbsolutePath() + File.separator + fileName + ".dat");
+            outStrokeData.write(strokeData);
+            result = true;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (outThumbnail != null) {
+                    outThumbnail.close();
+                }
+                if (outStrokeData != null) {
+                    outStrokeData.close();
+                }
+                bitmap.recycle();
+            } catch (IOException e) {
+                e.printStackTrace();
+                result = false;
+            }
+        }
+
+        return result;
     }
 }

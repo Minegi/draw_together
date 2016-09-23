@@ -79,6 +79,7 @@
     <string name="stroke_data_path">stroke_path</string>
     <string name="dlg_confirm_save_to_picture">현재까지의 작품을 이미지로 저장하시겠습니까?\n저장하시려면 하단에 파일명을 입력해주세요.</string>
     <string name="dlg_confirm_choice_artwork">이 작품을 그리시겠습니까?</string>
+    <string name="cant_save_local">저장에 실패하였습니다.</string>
 
 
 </resources>

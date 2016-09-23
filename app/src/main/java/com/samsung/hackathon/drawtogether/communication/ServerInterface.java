@@ -162,6 +162,7 @@ public class ServerInterface {
                     String header = response.headers().get("Content-Disposition");
                     String fileName = header.replace("attachment; filename=", "").replace("\"", "");
                     final String filePath = fileDir + File.separator + fileName;
+                    App.L.d(filePath);
 
                     new Thread(new Runnable() {
                         @Override

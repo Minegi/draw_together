@@ -53,7 +53,6 @@ public class ArtworkChoiceActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(Response<ResponseBody> response) {
                     App.L.d("download completed");
-                    Toast.makeText(mContext, R.string.download_completed, Toast.LENGTH_LONG).show();
                     final Intent intent = new Intent(mContext, ImitatorActivity.class);
                     intent.putExtra(getString(R.string.stroke_data_path), mStrokeDataPath);
                     startActivity(intent);

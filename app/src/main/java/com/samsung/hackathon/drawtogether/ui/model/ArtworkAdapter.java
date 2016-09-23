@@ -47,7 +47,6 @@ public class ArtworkAdapter extends BaseAdapter {
                 addItem(new ArtworkItem(item.name, item.strokeData,
                             ServerInterface.DOWNLOAD_URL + item.thumbnail));
                 App.L.d("i=" + i + ", name=" + artworkList.get(i).name +
-                        ", strokeData=" + item.strokeData +
                         ", thumbnail=" + ServerInterface.DOWNLOAD_URL + item.thumbnail);
             }
         }
