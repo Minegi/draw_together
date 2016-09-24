@@ -2,6 +2,7 @@ package com.samsung.hackathon.drawtogether.ui;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
@@ -9,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.RippleDrawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -989,14 +991,37 @@ public class ImitatorActivity extends AppCompatActivity {
 
                     @Override
                     public void onClick(final DialogInterface dlg, final int which) {
+                        final String artworkTitle = mArtworkTitle.getText().toString();
+                        if (artworkTitle == null || artworkTitle.isEmpty()) {
+                            ImitatorActivity.this.runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(ImitatorActivity.this,
+                                            R.string.input_title, Toast.LENGTH_LONG).show();
+                                }
+                            });
+                            return;
+                        }
+
                         if (mArtworkTitle == null) {
                             showCantSaveFileToast();
                             return;
                         }
 
-                        if (createImageToPicturePath(mArtworkTitle.getText().toString())) {
+                        final String fileName = mArtworkTitle.getText().toString();
+
+                        if (createImageToPicturePath(fileName)) {
+                            final String picturesDir = Environment.getExternalStorageDirectory()
+                                    + File.separator + Environment.DIRECTORY_PICTURES;
+                            final File savedPictureFile = new File(picturesDir + File.separator
+                            + fileName + ".png");
                             Toast.makeText(ImitatorActivity.this, R.string.save_complete,
                                     Toast.LENGTH_LONG).show();
+                            Intent intent = new Intent();
+                            intent.setAction(Intent.ACTION_VIEW);
+                            intent.setDataAndType(Uri.fromFile(savedPictureFile), "image/png");
+                            startActivity(intent);
+                            finish();
                         } else {
                             showCantSaveFileToast();
                             return;
