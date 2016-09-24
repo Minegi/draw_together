@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">DrawTogether</string>
+    <string name="app_name">Let\'s Draw Together</string>
     <string name="title_activity_creator">CreatorActivity</string>
 
     <!-- used in MainActivity -->
@@ -59,7 +59,7 @@
     <string name="dlg_save_and_upload_description">현재까지의 내용을 저장하고 마켓에 업로드하시겠습니까?</string>
     <string name="draw_data_isnt_exist">업로드할 작업물이 없습니다.</string>
     <string name="dlg_end">종료</string>
-    <string name="dlg_confirm_close_app">정말로 DrawTogether를 종료하시겠습니까?</string>
+    <string name="dlg_confirm_close_app">정말로 Let\'s Draw Together를 종료하시겠습니까?</string>
     <string name="dlg_confirm_move_to_main">저장하지 않고 메인 메뉴로 이동하시겠습니까?</string>
     <string name="dlg_download">내려받기</string>
     <string name="dlg_confirm_download">이 작품을 내려받으시겠습니까?</string>
