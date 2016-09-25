@@ -38,16 +38,24 @@ public class ArtworkAdapter extends BaseAdapter {
             = new ServerInterface.ServerApiEventListener<List<ArtworkItem>>() {
         @Override
         public void onResponse(Response<List<ArtworkItem>> response) {
-            App.L.d("");
-            List<ArtworkItem> artworkList = response.body();
+            if (response != null) {
+                App.L.d("response.code=" + response.code());
+                if (response.code() == 200) {
+                    List<ArtworkItem> artworkList = response.body();
 
-            for (int i = 0; i < artworkList.size(); ++i) {
-                final ArtworkItem item = artworkList.get(i);
+                    for (int i = 0; i < artworkList.size(); ++i) {
+                        final ArtworkItem item = artworkList.get(i);
 
-                addItem(new ArtworkItem(item.name, item.strokeData,
-                            ServerInterface.DOWNLOAD_URL + item.thumbnail));
-                App.L.d("i=" + i + ", name=" + artworkList.get(i).name +
-                        ", thumbnail=" + ServerInterface.DOWNLOAD_URL + item.thumbnail);
+                        addItem(new ArtworkItem(item.name, item.strokeData,
+                                ServerInterface.DOWNLOAD_URL + item.thumbnail));
+                        App.L.d("i=" + i + ", name=" + artworkList.get(i).name +
+                                ", thumbnail=" + ServerInterface.DOWNLOAD_URL + item.thumbnail);
+                    }
+                } else {
+                    showCantConnectServerToastAndFinish();
+                }
+            } else {
+                showCantConnectServerToastAndFinish();
             }
         }
 
@@ -67,6 +75,13 @@ public class ArtworkAdapter extends BaseAdapter {
             App.L.e(t.getMessage());
         }
     };
+
+    private void showCantConnectServerToastAndFinish() {
+        Toast.makeText(mContext, R.string.cant_connect_server, Toast.LENGTH_LONG).show();
+        if (mContext instanceof Activity) {
+            ((Activity) mContext).finish();
+        }
+    }
 
     public ArtworkAdapter(final Context context) {
         mContext = context;
