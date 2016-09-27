@@ -681,8 +681,6 @@ public class CreatorActivity extends AppCompatActivity {
         } catch (SsdkUnsupportedException e) {
             App.L.e("SsdkUnsupportedException occurred");
             if (SPenSdkUtils.processUnsupportedException(this, e)) {
-                mSpenSurfaceView.setToolTypeAction(SpenSurfaceView.TOOL_FINGER,
-                        SpenSurfaceView.ACTION_STROKE);
                 Toast.makeText(mContext, R.string.cant_support_spen_sdk, Toast.LENGTH_LONG).show();
             }
         } catch (Exception e) {
@@ -742,10 +740,8 @@ public class CreatorActivity extends AppCompatActivity {
 
         mSpenSurfaceView.setPageDoc(mSpenPageDoc, true);
 
-        // 아직까지는 Spen 모드만 지원한다
         if (!mIsSpenFeatureEnabled) {
             Toast.makeText(mContext, R.string.device_doesnt_support_spen, Toast.LENGTH_LONG).show();
-            finish();
         }
     }
 
@@ -779,8 +775,14 @@ public class CreatorActivity extends AppCompatActivity {
         // set stroke action
         mSpenSurfaceView.setToolTypeAction(SpenSettingViewInterface.TOOL_SPEN,
                 SpenSurfaceView.ACTION_STROKE);
-        mSpenSurfaceView.setToolTypeAction(SpenSettingViewInterface.TOOL_FINGER,
-                SpenSurfaceView.ACTION_GESTURE);
+
+        if (mIsSpenFeatureEnabled) {
+            mSpenSurfaceView.setToolTypeAction(SpenSettingViewInterface.TOOL_FINGER,
+                    SpenSurfaceView.ACTION_GESTURE);
+        } else {
+            mSpenSurfaceView.setToolTypeAction(SpenSettingViewInterface.TOOL_FINGER,
+                    SpenSurfaceView.ACTION_STROKE);
+        }
 
         // disable zoom action
         mSpenSurfaceView.setZoomable(true);
